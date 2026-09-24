@@ -614,9 +614,15 @@ function locate(manual){
   if(!navigator.geolocation){if(manual)msgGps('この画面では位置情報が使えません。都市をえらんでください。');return}
   if(manual)msgGps('現在地をさがしています…');
   navigator.geolocation.getCurrentPosition(p=>{const {latitude:la,longitude:lo}=p.coords;setPlace(la,lo,nearestCity(la,lo),'gps');if(manual)placeSheet()},
-    e=>{if(manual)msgGps(e.code===1?'位置情報が許可されていません。iPhoneの「設定 → プライバシー → 位置情報サービス → Safari」をオンにするか、都市をえらんでください。':'現在地が取れませんでした。都市をえらんでください。')},
+    e=>{if(!manual)return;if(e.code===1){msgGps('');const m=$('gpsMsg');if(m)m.innerHTML=DENIED_HELP}
+      else msgGps(e.code===3?'時間内に現在地が取れませんでした。空が見える場所でもう一度ためすか、都市をえらんでください。':'現在地が取れませんでした（'+e.code+'）。都市をえらんでください。')},
     {enableHighAccuracy:false,timeout:12000,maximumAge:600000});
 }
+const DENIED_HELP=`<strong style="color:var(--gold)">このページの位置情報がブロックされています。</strong>次の3か所を確認してね：<br>
+① 設定 → プライバシーとセキュリティ → 位置情報サービス → いちばん下の方の<b>「Safari Webサイト」</b>→「このAppの使用中」<br>
+② 設定 → アプリ → Safari → 「Webサイトの設定」の<b>「位置情報」</b>→「確認」か「許可」<br>
+③ Safariでこのページを開き、アドレスバーの左のボタン（ぁあ／ページメニュー）→<b>「Webサイトの設定」</b>→位置情報→「許可」<br>
+なおしたら、ページを読み込み直して、もう一度「GPSで現在地をつかう」をおしてね。`;
 function msgGps(t){const m=$('gpsMsg');if(m)m.textContent=t}
 
 function settingsSheet(){
@@ -707,7 +713,7 @@ function loop(){
   if(dirty)render();requestAnimationFrame(loop);
 }
 updateTop();
-if(store.get('place',null)==null||S.placeSrc==='gps')locate(false);
+if(S.placeSrc==='gps')locate(false);
 requestAnimationFrame(loop);
 </script>
 
