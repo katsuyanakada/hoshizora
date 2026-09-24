@@ -16,6 +16,7 @@
 html,body{height:100%;margin:0;background:var(--sky);color:var(--ink);font-family:var(--font);overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
 html.red{filter:grayscale(1) sepia(1) saturate(9) hue-rotate(-48deg) brightness(.72)}
+[hidden]{display:none!important}
 #sky{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block}
 button,select,input{font-family:inherit;color:inherit}
 button{cursor:pointer}
@@ -38,7 +39,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
   padding:6px 12px;border-radius:10px;max-width:calc(100vw - 32px);text-align:center;pointer-events:none}
 
 .bar{position:fixed;left:0;right:0;bottom:0;padding:8px 10px calc(env(safe-area-inset-bottom,0px) + 10px);
-  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:linear-gradient(to top,rgba(6,10,28,.95) 60%,rgba(6,10,28,0))}
+  display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:linear-gradient(to top,rgba(6,10,28,.95) 60%,rgba(6,10,28,0))}
 .bar button{background:none;border:0;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:4px;
   font-size:11px;color:var(--ink2);border-radius:12px}
 .bar button svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -76,6 +77,17 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 .toggle{display:flex;justify-content:space-between;align-items:center;padding:10px 2px;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px}
 .toggle input{width:20px;height:20px;accent-color:var(--gold)}
 .note{font-size:12px;color:var(--ink2);line-height:1.7;margin-top:10px}
+.guide{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 76px);max-width:520px;margin-inline:auto;
+  display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid rgba(255,207,107,.5);border-radius:16px;padding:10px 10px 10px 14px;
+  box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.guide .gt{flex:1;min-width:0;font-size:13px;line-height:1.5;color:var(--ink2)}
+.guide .gt b{display:block;font-size:17px;color:var(--gold)}
+.guide.found{border-color:#8fe3a8}.guide.found .gt b{color:#8fe3a8}
+.guide .close{position:static;flex:none}
+.search{width:100%;box-sizing:border-box;font-size:17px;padding:11px 14px;border-radius:12px;border:1px solid var(--edge);background:rgba(255,255,255,.07);-webkit-user-select:text;user-select:text}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.chips button{border:1px solid var(--edge);background:rgba(255,255,255,.05);border-radius:999px;padding:6px 11px;font-size:13px}
+.list button.below{opacity:.55}
 .toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--edge);
   padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.6;max-width:calc(100vw - 48px);text-align:center;pointer-events:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -95,9 +107,11 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 
 <div class="sheet" id="sheet" hidden role="dialog"><button class="close" id="closeSheet" aria-label="とじる">×</button><div id="sheetBody"></div></div>
 
+<div class="guide" id="guide" hidden><div class="gt" id="guideText"></div><button class="btn primary" id="guideAr" hidden>かざしてさがす</button><button class="close" id="guideClose" aria-label="さがすのをやめる">×</button></div>
 <nav class="bar">
   <button id="arBtn" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M10.5 18.5h3"/><path d="M12 6l1 2 2 .3-1.5 1.4.4 2.1-1.9-1-1.9 1 .4-2.1L9 8.3l2-.3z"/></svg>かざす</button>
-  <button id="tonightBtn"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M17 3v3M15.5 4.5h3"/></svg>今夜のみどころ</button>
+  <button id="searchBtn"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>さがす</button>
+  <button id="tonightBtn"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M17 3v3M15.5 4.5h3"/></svg>みどころ</button>
   <button id="nowBtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>いまの空</button>
   <button id="setBtn"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>表示</button>
 </nav>
@@ -289,7 +303,7 @@ if(S.red)document.documentElement.classList.add('red');
 /* ---------- 描画 ---------- */
 const cv=$('sky'),ctx=cv.getContext('2d');
 let W=0,H=0,DPR=1,dirty=true,hits=[];
-function resize(){DPR=Math.min(window.devicePixelRatio||1,3);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;dirty=true}
+function resize(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;dirty=true}
 addEventListener('resize',resize);resize();
 
 const STAR_EQ=STARS.map(s=>eqVec(s[0],s[1]));
@@ -316,8 +330,14 @@ function proj(v){const d=dot(v,cam.f);if(d<-0.97)return null;const k=cam.sc/(1+d
 const onScreen=(p,m=40)=>p&&p[0]>-m&&p[0]<W+m&&p[1]>-m&&p[1]<H+m;
 
 let frame=null;
+let cacheKey='',cacheFrame=null;
 function compute(){
-  const t=nowT(),M=horizMatrix(t,S.lat,S.lon),ss=solarSystem(t);
+  const t=S.fixedT!=null?S.fixedT:Math.floor(Date.now()/5000)*5000;
+  const key=t+'|'+S.lat+'|'+S.lon;if(key===cacheKey)return cacheFrame;cacheKey=key;
+  return cacheFrame=computeAt(t);
+}
+function computeAt(t){
+  const M=horizMatrix(t,S.lat,S.lon),ss=solarSystem(t);
   const toH=v=>mul(M,v);
   const moonH=toH(ss.moon.eq);
   // 月の視差（地球半径単位）
@@ -441,6 +461,7 @@ function render(){
 
   drawGround();
   drawSelection();
+  updateGuide();
   if(S.ar)drawCrosshair();
   updateBanner(sunAlt);
 }
@@ -482,7 +503,7 @@ function objH(o){
 function drawSelection(){
   if(!S.sel)return;const h=objH(S.sel);if(!h)return;const p=proj(h);
   const inView=p&&p[2]>0.05&&p[0]>20&&p[0]<W-20&&p[1]>70&&p[1]<H-90;
-  if(inView&&S.sel.type!=='cons'&&S.sel.type!=='asterism'){ctx.strokeStyle='#ffcf6b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p[0],p[1],18,0,7);ctx.stroke()}
+  if(inView&&S.sel.type!=='cons'&&S.sel.type!=='asterism'){const pulse=guideOn?4*Math.sin(performance.now()/250):0;ctx.strokeStyle='#ffcf6b';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(p[0],p[1],20+pulse,0,7);ctx.stroke();if(guideOn)dirty=true}
   if(!inView){ // 画面の外 → 矢印
     const dx=dot(h,cam.r),dy=-dot(h,cam.u);let ang=Math.atan2(dy,dx);if(Math.hypot(dx,dy)<1e-3)ang=-Math.PI/2;
     const rx=W/2-44,ry=H/2-110,t=Math.min(Math.abs(rx/Math.cos(ang)),Math.abs(ry/Math.sin(ang)));
@@ -523,10 +544,10 @@ function riseHint(o){
 /* ---------- シート ---------- */
 let sheetKind=null;
 function openSheet(kind,html){sheetKind=kind;$('sheetBody').innerHTML=html;$('sheet').hidden=false;
-  for(const b of ['tonightBtn','setBtn'])$(b).setAttribute('aria-pressed',String((kind==='tonight'&&b==='tonightBtn')||(kind==='set'&&b==='setBtn')))}
-function closeSheet(){$('sheet').hidden=true;sheetKind=null;S.sel=null;dirty=true;
-  for(const b of ['tonightBtn','setBtn'])$(b).setAttribute('aria-pressed','false')}
-$('closeSheet').onclick=closeSheet;
+  for(const b of ['tonightBtn','setBtn','searchBtn'])$(b).setAttribute('aria-pressed',String((kind==='tonight'&&b==='tonightBtn')||(kind==='set'&&b==='setBtn')||(kind==='search'&&b==='searchBtn')))}
+function closeSheet(keep){$('sheet').hidden=true;sheetKind=null;if(keep!==true){S.sel=null;guideOn=false}dirty=true;
+  for(const b of ['tonightBtn','setBtn','searchBtn'])$(b).setAttribute('aria-pressed','false')}
+$('closeSheet').onclick=()=>closeSheet();
 
 function magWord(m){return m<1.5?'1等星（とくに明るい星）':`${Math.round(m)}等星`}
 function consName(code){const c=CONS[code];return c?c.ja:''}
@@ -548,9 +569,71 @@ function showInfo(o){
   openSheet('info',`<div class="sub">${kind}</div><h2>${title}</h2>
     ${tags.length?`<div class="facts">${tags.map((t,i)=>`<span class="tag ${i===0?'gold':''}">${t}</span>`).join('')}</div>`:''}
     <p>${text}</p>${north}${where}
-    <div class="row"><button class="btn" id="goBtn">${S.ar?'矢印の方へスマホを向けてね':'この方向を見る'}</button></div>`);
-  const gb=$('goBtn');if(!S.ar)gb.onclick=()=>flyTo(h);else gb.disabled=true;
+    <div class="row">${S.ar?'':'<button class="btn" id="goBtn">この方向を見る</button>'}<button class="btn primary" id="guideBtn">${S.ar?'矢印でさがす':'スマホをかざしてさがす'}</button></div>`);
+  if(!S.ar)$('goBtn').onclick=()=>flyTo(h);
+  $('guideBtn').onclick=()=>{startGuide(o,true)};
 }
+/* ---------- さがす ---------- */
+const hira=t=>t.replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[・\s　]/g,'').toLowerCase();
+const YOMI={'水星':'すいせい','金星':'きんせい よいのみょうじょう あけのみょうじょう','火星':'かせい','木星':'もくせい','土星':'どせい','月':'つき おつきさま',
+ '北極星':'ほっきょくせい ぽらりす','すばる':'ぷれあです','夏の大三角':'なつのだいさんかく','冬の大三角':'ふゆのだいさんかく','秋の四辺形':'あきのしへんけい',
+ '春の大曲線':'はるのだいきょくせん','北斗七星':'ほくとしちせい','ベガ':'おりひめ','アルタイル':'ひこぼし','オリオン大星雲':'おりおんだいせいうん','アンドロメダ銀河':'あんどろめだぎんが'};
+let SEARCH=null;
+function searchIndex(){
+  if(SEARCH)return SEARCH;const L=[];
+  const add=(name,kind,o,pri)=>L.push({name,kind,o,pri,key:hira(name+' '+(YOMI[name]||''))});
+  add('月','月',{type:'moon',name:'月'},100);
+  for(const n of ['金星','木星','火星','土星','水星'])add(n,'惑星',{type:'planet',name:n},90);
+  for(const a of ASTERISMS)add(a.name,'星のならび',{type:'asterism',name:a.name},70);
+  for(const o of DSO_EQ)add(o.name,o.kind,o,60);
+  STARS.forEach((s,i)=>{if(s[4])add(s[4],'星・'+consName(s[5]),{type:'star',i},50-s[2])});
+  for(const c of CONS_LIST)add(c.ja,'星座',{type:'cons',id:c.id},c.rank===1?45:35);
+  return SEARCH=L;
+}
+function searchSheet(){
+  const quick=['木星','土星','金星','火星','月','北極星','夏の大三角','北斗七星','すばる','オリオン座','さそり座','カシオペヤ座'];
+  openSheet('search',`<h3>なにをさがす？</h3>
+    <input class="search" id="q" type="search" placeholder="例：木星、どせい、オリオン" autocomplete="off" enterkeyhint="search" aria-label="さがしたいもの">
+    <div class="chips">${quick.map(n=>`<button data-q="${n}">${n}</button>`).join('')}</div>
+    <ul class="list" id="qres"></ul>`);
+  const q=$('q');q.oninput=()=>renderResults(q.value);
+  $('sheetBody').querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const it=searchIndex().find(x=>x.name===b.dataset.q);if(it)pickResult(it)});
+  renderResults('');
+}
+function renderResults(text){
+  const k=hira(text.trim()),F=frame=compute();
+  let res=[];if(k){res=searchIndex().filter(x=>x.key.includes(k)).map(x=>({...x,sc:x.pri+(hira(x.name).startsWith(k)?100:0)}));res.sort((a,b)=>b.sc-a.sc);res=res.slice(0,30)}
+  const ul=$('qres');if(!ul)return;
+  if(k&&!res.length){ul.innerHTML='<li class="note">見つかりませんでした。ひらがなやカタカナでも入れてみてね。</li>';return}
+  ul.innerHTML=res.map((it,n)=>{const h=objH(it.o),d=dirText(h),below=d.alt<0;
+    return `<li><button data-n="${n}" class="${below?'below':''}"><span class="dot" style="background:${it.o.type==='planet'?PCOL[it.o.name]:it.o.type==='moon'?'#f6efd6':'#9fb0d8'}"></span><span>${it.name}<span class="kind">${it.kind}</span></span><span class="dir">${below?'地平線の下<br>いまは見えない':d.dir+'<br>高さ'+Math.round(d.alt)+'°'}</span></button></li>`}).join('');
+  ul.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>pickResult(res[+b.dataset.n]));
+}
+function pickResult(it){if(document.activeElement)document.activeElement.blur();if(S.ar)startGuide(it.o,false);else{showInfo(it.o);flyTo(objH(it.o))}}
+let guideOn=false;
+async function startGuide(o,wantAR){
+  S.sel=o;guideOn=true;closeSheet(true);
+  if(wantAR&&!S.ar)await startAR();
+  if(!S.ar)flyTo(objH(o));
+  dirty=true;
+}
+function selName(o){return o.type==='star'?STARS[o.i][4]:o.type==='cons'?CONS[o.id].ja:o.name}
+function updateGuide(){
+  const g=$('guide');const show=guideOn&&S.sel&&$('sheet').hidden;g.hidden=!show;if(!show)return;
+  const h=objH(S.sel),d=dirText(h),off=Math.acos(Math.max(-1,Math.min(1,dot(h,cam.f))))*R2D;
+  const found=S.ar&&off<7&&d.alt>0;g.classList.toggle('found',found);
+  let msg;
+  if(d.alt<0)msg='いまは地平線の下にあって見えません（'+d.dir+'の地面の下）';
+  else if(!S.ar)msg=`${d.dir}の空・高さ${Math.round(d.alt)}°（にぎりこぶし約${Math.max(1,Math.round(d.alt/10*2)/2)}こ分）`;
+  else if(found)msg='見つけた！まんなかの丸のあたりにあるよ';
+  else msg=`黄色い矢印の方へスマホを向けてね（あと${Math.round(off)}°）<br>${d.dir}の空・高さ${Math.round(d.alt)}°`;
+  $('guideText').innerHTML=`<b>${selName(S.sel)}</b>${msg}`;
+  $('guideAr').hidden=S.ar||d.alt<0;
+}
+$('guideClose').onclick=()=>{guideOn=false;S.sel=null;dirty=true};
+$('guideAr').onclick=()=>startGuide(S.sel,true);
+$('searchBtn').onclick=()=>sheetKind==='search'?closeSheet():searchSheet();
+
 function flyTo(h){
   if(S.ar)return;const taz=azOf(h),talt=Math.max(-5,Math.min(85,altOf(h)));
   const a0=S.az,h0=S.alt;let da=((taz-a0+540)%360)-180;const t0=performance.now();
@@ -685,7 +768,7 @@ function onOri(e){
   const r=[Math.cos(ang)*X[0]+Math.sin(ang)*Y[0],Math.cos(ang)*X[1]+Math.sin(ang)*Y[1],Math.cos(ang)*X[2]+Math.sin(ang)*Y[2]];
   const u=[-Math.sin(ang)*X[0]+Math.cos(ang)*Y[0],-Math.sin(ang)*X[1]+Math.cos(ang)*Y[1],-Math.sin(ang)*X[2]+Math.cos(ang)*Y[2]];
   const f=[-Z[0],-Z[1],-Z[2]];
-  if(S.basis){const L=(p,q)=>nrm(p.map((x,i)=>x+(q[i]-x)*0.35));const nf=L(S.basis.f,f),nu0=L(S.basis.u,u);
+  if(S.basis){const mv=Math.acos(Math.max(-1,Math.min(1,dot(S.basis.f,f))))*R2D,k=Math.min(1,0.55+mv*0.35);const L=(p,q)=>nrm(p.map((x,i)=>x+(q[i]-x)*k));const nf=L(S.basis.f,f),nu0=L(S.basis.u,u);
     const nr=nrm(cross(nf,nu0)),nu=cross(nr,nf);S.basis={f:nf,u:nu,r:nr}}
   else S.basis={f,u,r};
   dirty=true;
