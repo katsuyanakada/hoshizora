@@ -753,24 +753,40 @@ function tap(x,y){
 }
 
 /* ---------- スマホをかざすモード ---------- */
-let lastOri=0,compOff=null;
+let lastOri=0,compOff=null,compInit=[],rawPrev=null,speed=0;
 function declination(){return S.lon>122&&S.lon<150&&S.lat>20&&S.lat<47?-(4.5+(S.lat-26)*0.28):0}
+const angDeg=(p,q)=>Math.acos(Math.max(-1,Math.min(1,dot(p,q))))*R2D;
+function basisFrom(alpha,beta,gamma){
+  const a=alpha*D2R,b=beta*D2R,g=gamma*D2R,cA=Math.cos(a),sA=Math.sin(a),cB=Math.cos(b),sB=Math.sin(b),cG=Math.cos(g),sG=Math.sin(g);
+  const X=[cA*cG-sA*sB*sG,sA*cG+cA*sB*sG,-cB*sG],Y=[-sA*cB,cA*cB,sB],Z=[cA*sG+sA*sB*cG,sA*sG-cA*sB*cG,cB*cG];
+  const ang=((screen.orientation&&screen.orientation.angle)||window.orientation||0)*D2R,c=Math.cos(ang),s=Math.sin(ang);
+  return {f:[-Z[0],-Z[1],-Z[2]],r:[c*X[0]+s*Y[0],c*X[1]+s*Y[1],c*X[2]+s*Y[2]],u:[-s*X[0]+c*Y[0],-s*X[1]+c*Y[1],-s*X[2]+c*Y[2]]};
+}
 function onOri(e){
   if(e.alpha==null)return;lastOri=performance.now();
-  const hd=e.webkitCompassHeading;
-  let alpha=e.alpha;
-  if(hd!=null&&!isNaN(hd)){const trueHd=hd+declination();const off=norm360((360-trueHd)-e.alpha);
-    if(compOff==null)compOff=off;else{let d=((off-compOff+540)%360)-180;compOff=norm360(compOff+d*0.08)}alpha=e.alpha+compOff}
-  else if(e.absolute===true){alpha=e.alpha}
-  const a=alpha*D2R,b=e.beta*D2R,g=e.gamma*D2R,cA=Math.cos(a),sA=Math.sin(a),cB=Math.cos(b),sB=Math.sin(b),cG=Math.cos(g),sG=Math.sin(g);
-  const X=[cA*cG-sA*sB*sG,sA*cG+cA*sB*sG,-cB*sG],Y=[-sA*cB,cA*cB,sB],Z=[cA*sG+sA*sB*cG,sA*sG-cA*sB*cG,cB*cG];
-  const ang=((screen.orientation&&screen.orientation.angle)||window.orientation||0)*D2R;
-  const r=[Math.cos(ang)*X[0]+Math.sin(ang)*Y[0],Math.cos(ang)*X[1]+Math.sin(ang)*Y[1],Math.cos(ang)*X[2]+Math.sin(ang)*Y[2]];
-  const u=[-Math.sin(ang)*X[0]+Math.cos(ang)*Y[0],-Math.sin(ang)*X[1]+Math.cos(ang)*Y[1],-Math.sin(ang)*X[2]+Math.cos(ang)*Y[2]];
-  const f=[-Z[0],-Z[1],-Z[2]];
-  if(S.basis){const mv=Math.acos(Math.max(-1,Math.min(1,dot(S.basis.f,f))))*R2D,k=Math.min(1,0.55+mv*0.35);const L=(p,q)=>nrm(p.map((x,i)=>x+(q[i]-x)*k));const nf=L(S.basis.f,f),nu0=L(S.basis.u,u);
+  // 1) まずジャイロの値（なめらか）で向きを出す
+  let raw=basisFrom(e.alpha,e.beta,e.gamma);
+  const mv=rawPrev?angDeg(rawPrev,raw.f):0;rawPrev=raw.f;
+  speed=speed*0.8+mv*0.2; // 動いている速さ（度/回）
+  // 2) 方位磁石は「北の向きのずれ」をゆっくり補正するだけに使う
+  const hd=e.webkitCompassHeading,acc=e.webkitCompassAccuracy;
+  if(hd!=null&&!isNaN(hd)){
+    const off=norm360((360-(hd+declination()))-e.alpha);
+    const camAlt=altOf(raw.f);
+    if(compOff==null){compInit.push(off);if(compInit.length>=8){
+      const sx=compInit.reduce((t,o)=>t+Math.sin(o*D2R),0),cx=compInit.reduce((t,o)=>t+Math.cos(o*D2R),0);compOff=norm360(Math.atan2(sx,cx)*R2D)}}
+    else if(speed<0.3&&Math.abs(camAlt)<50&&(acc==null||(acc>=0&&acc<=25))){
+      const d=((off-compOff+540)%360)-180;if(Math.abs(d)<25)compOff=norm360(compOff+d*0.01)}
+  }else if(e.absolute!==true&&compOff==null)compOff=0;
+  if(compOff==null)return; // 方位が決まるまで待つ
+  if(compOff)raw=basisFrom(e.alpha+compOff,e.beta,e.gamma);
+  // 3) 止めているときは強く、動かしたときは素早く追いかける
+  if(S.basis){const k=Math.min(1,0.12+speed*0.35);
+    const L=(p,q)=>nrm(p.map((x,i)=>x+(q[i]-x)*k));const nf=L(S.basis.f,raw.f),nu0=L(S.basis.u,raw.u);
+    const moved=angDeg(S.basis.f,nf);
+    if(moved<0.02&&speed<0.05)return; // ほとんど動いていなければ描き直さない
     const nr=nrm(cross(nf,nu0)),nu=cross(nr,nf);S.basis={f:nf,u:nu,r:nr}}
-  else S.basis={f,u,r};
+  else S.basis=raw;
   dirty=true;
 }
 let wake=null;
@@ -779,7 +795,7 @@ async function startAR(){
     if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
       const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted'){toast('センサーの使用が許可されませんでした。指でドラッグして見てね',3500);return}}
   }catch(err){toast('この画面ではスマホの向きセンサーが使えません。指でドラッグして見てね',3500);return}
-  S.ar=true;S.basis=null;compOff=null;lastOri=0;if(S.fov>110)S.fov=80;
+  S.ar=true;S.basis=null;compOff=null;compInit=[];rawPrev=null;speed=0;lastOri=0;if(S.fov>110)S.fov=80;
   addEventListener('deviceorientation',onOri);$('arBtn').setAttribute('aria-pressed','true');
   toast('スマホを見たい空に向けてね。方位が合わないときは、8の字にスマホを動かすと直ります',3500);
   try{wake=await navigator.wakeLock?.request('screen')}catch(e){}
