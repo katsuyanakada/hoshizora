@@ -200,6 +200,8 @@ const PLANET_FACTS={
  '火星':'赤く見える惑星。約2年2か月ごとに地球に近づいて明るくなります。',
  '木星':'太陽系でいちばん大きな惑星。双眼鏡で見ると、横に小さな衛星がならんで見えることも！',
  '土星':'輪のある惑星。小さな望遠鏡でも輪が見えます。',
+ '天王星':'横だおしのまま太陽のまわりを回っている、青緑色の惑星。とても暗いので目では見えません。双眼鏡や望遠鏡があれば、緑っぽい小さな点として見つけられます。',
+ '海王星':'太陽からいちばん遠い惑星。とても遠くて暗いので、目では見えません。望遠鏡で見ると青い小さな点に見えます。太陽のまわりを1周するのに約165年もかかります。',
 };
 const DSO=[
  {name:'すばる',ra:56.75,dec:24.12,kind:'星団',text:'おうし座にある星の集まり（プレアデス星団）。目のいい人は6〜7こ数えられます。双眼鏡で見るとすごくきれい！'},
@@ -243,6 +245,8 @@ const EL={
  '地球':[1.00000261,0.00000562,0.01671123,-0.00004392,-0.00001531,-0.01294668,100.46457166,35999.37244981,102.93768193,0.32327364,0,0],
  '火星':[1.52371034,0.00001847,0.09339410,0.00007882,1.84969142,-0.00813131,-4.55343205,19140.30268499,-23.94362959,0.44441088,49.55953891,-0.29257343],
  '木星':[5.20288700,-0.00011607,0.04838624,-0.00013253,1.30439695,-0.00183714,34.39644051,3034.74612775,14.72847983,0.21252668,100.47390909,0.20469106],
+ '天王星':[19.18916464,-0.00196176,0.04725744,-0.00004397,0.77263783,-0.00242939,313.23810451,428.48202785,170.95427630,0.40805281,74.01692503,0.04240589],
+ '海王星':[30.06992276,0.00026291,0.00859048,0.00005105,1.77004347,0.00035372,-55.12002969,218.45945325,44.96476227,-0.32241464,131.78422574,-0.00508664],
  '土星':[9.53667594,-0.00125060,0.05386179,-0.00050991,2.48599187,0.00193609,49.95424423,1222.49362201,92.59887831,-0.41897216,113.66242448,-0.28867794],
 };
 function helio(name,T){
@@ -270,12 +274,12 @@ function moonEcl(t){
   const dist=r-0.58*Math.cos((M-2*Dm)*D2R)-0.46*Math.cos(2*Dm*D2R);
   return {lon:norm360(lon),lat,dist};
 }
-const PCOL={'水星':'#c9c2b4','金星':'#fff6d8','火星':'#ff8a5c','木星':'#f3dcb0','土星':'#e8d59a'};
-const PMAG={'水星':0,'金星':-4,'火星':0.5,'木星':-2.2,'土星':0.6};
+const PCOL={'水星':'#c9c2b4','金星':'#fff6d8','火星':'#ff8a5c','木星':'#f3dcb0','土星':'#e8d59a','天王星':'#a8e3df','海王星':'#7fa3ff'};
+const PMAG={'水星':0,'金星':-4,'火星':0.5,'木星':-2.2,'土星':0.6,'天王星':5.7,'海王星':7.8};
 function solarSystem(t){
   const T=(jd(t)-2451545)/36525,earth=helio('地球',T),out=[];
   const sunEcl=[-earth[0],-earth[1],-earth[2]];
-  for(const n of ['水星','金星','火星','木星','土星']){
+  for(const n of ['水星','金星','火星','木星','土星','天王星','海王星']){
     const p=helio(n,T),g=[p[0]-earth[0],p[1]-earth[1],p[2]-earth[2]];
     out.push({type:'planet',name:n,eq:nrm(eclToEq(g)),mag:PMAG[n],color:PCOL[n],dist:Math.hypot(...g)});
   }
@@ -449,7 +453,9 @@ function render(){
     hits.push({x:p[0],y:p[1],r:34,pri:1,obj:{type:'cons',id:c.id}});}
   // 惑星
   if(S.show.planets)for(const pl of F.planets){const p=proj(pl.h);if(!onScreen(p))continue;
-    const r=Math.max(2.4,(1.8-pl.mag)*1.35)*z;ctx.globalAlpha=pl.h[2]<0?0.75:1;
+    const faint=pl.mag>4,r=(faint?1.8:Math.max(2.4,(1.8-pl.mag)*1.35))*z;ctx.globalAlpha=pl.h[2]<0?0.75:1;
+    if(faint){ctx.fillStyle=pl.color;ctx.beginPath();ctx.arc(p[0],p[1],r,0,7);ctx.fill();ctx.globalAlpha=1;
+      label(pl.name,p[0]+r+5,p[1]+4,'rgba(255,207,107,.6)',11,'left');hits.push({x:p[0],y:p[1],r:r+18,pri:4,obj:pl});continue}
     const gg=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],r*3);gg.addColorStop(0,pl.color);gg.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle=gg;ctx.beginPath();ctx.arc(p[0],p[1],r*3,0,7);ctx.fill();ctx.fillStyle=pl.color;ctx.beginPath();ctx.arc(p[0],p[1],r,0,7);ctx.fill();
     if(pl.name==='土星'){ctx.strokeStyle=pl.color;ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(p[0],p[1],r*2.1,r*0.7,-0.35,0,7);ctx.stroke()}
@@ -593,7 +599,7 @@ function showInfo(o){
 }
 /* ---------- さがす ---------- */
 const hira=t=>t.replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[・\s　]/g,'').toLowerCase();
-const YOMI={'水星':'すいせい','金星':'きんせい よいのみょうじょう あけのみょうじょう','火星':'かせい','木星':'もくせい','土星':'どせい','月':'つき おつきさま',
+const YOMI={'水星':'すいせい','金星':'きんせい よいのみょうじょう あけのみょうじょう','火星':'かせい','木星':'もくせい','土星':'どせい','天王星':'てんのうせい うらぬす','海王星':'かいおうせい ねぷちゅーん','月':'つき おつきさま',
  '北極星':'ほっきょくせい ぽらりす','すばる':'ぷれあです','夏の大三角':'なつのだいさんかく','冬の大三角':'ふゆのだいさんかく','秋の四辺形':'あきのしへんけい',
  '春の大曲線':'はるのだいきょくせん','北斗七星':'ほくとしちせい','ベガ':'おりひめ','アルタイル':'ひこぼし','オリオン大星雲':'おりおんだいせいうん','アンドロメダ銀河':'あんどろめだぎんが'};
 let SEARCH=null;
@@ -602,6 +608,7 @@ function searchIndex(){
   const add=(name,kind,o,pri)=>L.push({name,kind,o,pri,key:hira(name+' '+(YOMI[name]||''))});
   add('月','月',{type:'moon',name:'月'},100);
   for(const n of ['金星','木星','火星','土星','水星'])add(n,'惑星',{type:'planet',name:n},90);
+  for(const n of ['天王星','海王星'])add(n,'惑星（望遠鏡で見える）',{type:'planet',name:n},85);
   for(const a of ASTERISMS)add(a.name,'星のならび',{type:'asterism',name:a.name},70);
   for(const o of DSO_EQ)add(o.name,o.kind,o,60);
   STARS.forEach((s,i)=>{if(s[4])add(s[4],'星・'+consName(s[5]),{type:'star',i},50-s[2])});
@@ -621,6 +628,11 @@ function searchSheet(){
   renderResults('');
 }
 let lastRes=[];
+const SEARCH_NOTES=[
+ [['めいおうせい','冥王星','ぷるーと'],'冥王星は、いまは「準惑星」というなかまです。とても小さくて暗いので、大きな望遠鏡でないと見えません。'],
+ [['たいよう','太陽'],'太陽は、ぜったいに直接見てはいけません。目をいためてしまいます。昼間は太陽のまわりの空も見ないようにしよう。'],
+ [['ちきゅう','地球'],'地球は、いまあなたが立っている星！ 地平線より下が地球の中です。'],
+];
 // キーボードが閉じて画面がずれても、押したボタンで確実に反応させる
 function onTap(el,fn){let st=null,done=false;
   el.addEventListener('pointerdown',e=>{st={x:e.clientX,y:e.clientY};done=false});
@@ -631,7 +643,8 @@ function renderResults(text){
   let res=[];if(k){res=searchIndex().filter(x=>x.key.includes(k)).map(x=>({...x,sc:x.pri+(hira(x.name).startsWith(k)?100:0)}));res.sort((a,b)=>b.sc-a.sc);res=res.slice(0,30)}
   lastRes=res;
   const ul=$('qres');if(!ul)return;
-  if(k&&!res.length){ul.innerHTML='<li class="note">見つかりませんでした。ひらがなやカタカナでも入れてみてね。</li>';return}
+  if(k&&!res.length){const nt=SEARCH_NOTES.find(n=>n[0].some(w=>w.includes(k)||k.includes(w)));
+    ul.innerHTML='<li class="note">'+(nt?nt[1]:'見つかりませんでした。ひらがなやカタカナでも入れてみてね。')+'</li>';return}
   ul.innerHTML=res.map((it,n)=>{const h=objH(it.o),d=dirText(h),below=d.alt<0;
     return `<li><button data-n="${n}" class="${below?'below':''}${n===0?' top':''}"><span class="dot" style="background:${it.o.type==='planet'?PCOL[it.o.name]:it.o.type==='moon'?'#f6efd6':'#9fb0d8'}"></span><span>${it.name}<span class="kind">${it.kind}</span></span><span class="dir">${below?'地平線の下<br>いまは見えない':d.dir+'<br>高さ'+Math.round(d.alt)+'°'}</span></button></li>`}).join('');
   ul.querySelectorAll('[data-n]').forEach(b=>onTap(b,()=>pickResult(res[+b.dataset.n])));
@@ -675,7 +688,7 @@ function tonightList(){
   const F=frame=compute(),items=[];
   const add=(o,name,kind,col,h,score)=>{const a=altOf(h);if(a<3)return;const d=dirText(h);items.push({o,name,kind,col,dir:d.dir,alt:a,score})};
   add(F.moon,'月','月齢'+F.moon.age.toFixed(0),'#f6efd6',F.moon.h,100);
-  for(const p of F.planets)add(p,p.name,'惑星',p.color,p.h,90-p.mag);
+  for(const p of F.planets)if(p.mag<4)add(p,p.name,'惑星',p.color,p.h,90-p.mag);
   for(const a of ASTERISMS){if(a.curve)continue;const vs=a.stars.map(n=>F.stars[byName[n]]);if(vs.every(v=>altOf(v)>8))add({type:'asterism',name:a.name},a.name,'星のならび','#ffcf6b',objH({type:'asterism',name:a.name}),70)}
   if(S.lat>5)add({type:'star',i:byName['北極星']},'北極星','北の目じるし','#fff6ec',F.stars[byName['北極星']],65);
   STARS.forEach((s,i)=>{if(s[2]<1.6&&s[4]&&s[4]!=='北極星')add({type:'star',i},s[4],magWord(s[2]).replace(/（.*/,'')+'・'+consName(s[5]),bvColor(s[3]),F.stars[i],50-s[2])});
