@@ -84,7 +84,9 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 .guide .gt b{display:block;font-size:17px;color:var(--gold)}
 .guide.found{border-color:#8fe3a8}.guide.found .gt b{color:#8fe3a8}
 .guide .close{position:static;flex:none}
-.search{width:100%;box-sizing:border-box;font-size:17px;padding:11px 14px;border-radius:12px;border:1px solid var(--edge);background:rgba(255,255,255,.07);-webkit-user-select:text;user-select:text}
+.qrow{display:flex;gap:8px;align-items:stretch}.qrow .btn{flex:none;font-size:15px;padding:0 16px}
+.list button.top{background:rgba(255,207,107,.08);border-radius:10px}
+.search{flex:1;min-width:0;width:100%;box-sizing:border-box;font-size:17px;padding:11px 14px;border-radius:12px;border:1px solid var(--edge);background:rgba(255,255,255,.07);-webkit-user-select:text;user-select:text}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
 .chips button{border:1px solid var(--edge);background:rgba(255,255,255,.05);border-radius:999px;padding:6px 11px;font-size:13px}
 .list button.below{opacity:.55}
@@ -211,7 +213,7 @@ const ASTERISMS=[
  {name:'春の大曲線',stars:['アルカイド','ミザール','アリオト'],extra:['アルクトゥルス','スピカ'],curve:true,text:'北斗七星の柄のカーブをそのままのばすと、オレンジのアルクトゥルス、白いスピカにたどりつきます。'},
  {name:'北斗七星',stars:['アルカイド','ミザール','アリオト','メグレズ','フェクダ','メラク','ドゥベー','メグレズ'],open:true,text:'おおぐま座の7つの星でできたひしゃくの形。ひしゃくの先を5倍のばすと北極星！'},
 ];
-const CITIES=[['札幌',43.06,141.35],['仙台',38.27,140.87],['東京',35.68,139.77],['横浜',35.44,139.64],['名古屋',35.18,136.91],['大阪',34.69,135.50],['広島',34.39,132.46],['福岡',33.59,130.40],['鹿児島',31.60,130.56],['那覇',26.21,127.68]];
+const CITIES=[['札幌',43.06,141.35],['旭川',43.77,142.36],['函館',41.77,140.73],['青森',40.82,140.74],['盛岡',39.70,141.15],['秋田',39.72,140.10],['仙台',38.27,140.87],['山形',38.24,140.36],['福島',37.75,140.47],['新潟',37.90,139.02],['水戸',36.34,140.45],['宇都宮',36.57,139.88],['前橋',36.39,139.06],['さいたま',35.86,139.65],['千葉',35.61,140.12],['東京',35.68,139.77],['横浜',35.44,139.64],['甲府',35.66,138.57],['長野',36.65,138.18],['富山',36.70,137.21],['金沢',36.59,136.63],['福井',36.07,136.22],['静岡',34.98,138.38],['浜松',34.71,137.73],['名古屋',35.18,136.91],['岐阜',35.39,136.72],['津',34.73,136.51],['大津',35.00,135.87],['京都',35.02,135.76],['大阪',34.69,135.50],['神戸',34.69,135.18],['奈良',34.69,135.83],['和歌山',34.23,135.17],['鳥取',35.50,134.24],['松江',35.47,133.05],['岡山',34.66,133.93],['広島',34.39,132.46],['山口',34.19,131.47],['徳島',34.07,134.56],['高松',34.34,134.04],['松山',33.84,132.77],['高知',33.56,133.53],['北九州',33.88,130.88],['福岡',33.59,130.40],['久留米',33.32,130.51],['佐賀',33.25,130.30],['長崎',32.75,129.87],['熊本',32.79,130.74],['大分',33.24,131.61],['宮崎',31.91,131.42],['鹿児島',31.60,130.56],['那覇',26.21,127.68]];
 
 /* ---------- 天文計算 ---------- */
 const norm360=x=>((x%360)+360)%360;
@@ -609,23 +611,33 @@ function searchIndex(){
 function searchSheet(){
   const quick=['木星','土星','金星','火星','月','北極星','夏の大三角','北斗七星','すばる','オリオン座','さそり座','カシオペヤ座'];
   openSheet('search',`<h3>なにをさがす？</h3>
-    <input class="search" id="q" type="search" placeholder="例：木星、どせい、オリオン" autocomplete="off" enterkeyhint="search" aria-label="さがしたいもの">
+    <form class="qrow" id="qform" action="#"><input class="search" id="q" type="search" placeholder="例：木星、どせい、オリオン" autocomplete="off" enterkeyhint="search" aria-label="さがしたいもの"><button class="btn primary" type="submit">さがす</button></form>
     <div class="chips">${quick.map(n=>`<button data-q="${n}">${n}</button>`).join('')}</div>
     <ul class="list" id="qres"></ul>`);
   const q=$('q');q.oninput=()=>renderResults(q.value);
-  $('sheetBody').querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const it=searchIndex().find(x=>x.name===b.dataset.q);if(it)pickResult(it)});
+  $('qform').onsubmit=e=>{e.preventDefault();renderResults(q.value);
+    if(lastRes.length)pickResult(lastRes[0]);else if(!q.value.trim())q.focus()};
+  $('sheetBody').querySelectorAll('[data-q]').forEach(b=>onTap(b,()=>{const it=searchIndex().find(x=>x.name===b.dataset.q);if(it)pickResult(it)}));
   renderResults('');
 }
+let lastRes=[];
+// キーボードが閉じて画面がずれても、押したボタンで確実に反応させる
+function onTap(el,fn){let st=null,done=false;
+  el.addEventListener('pointerdown',e=>{st={x:e.clientX,y:e.clientY};done=false});
+  el.addEventListener('pointerup',e=>{if(st&&Math.hypot(e.clientX-st.x,e.clientY-st.y)<12){done=true;fn()}st=null});
+  el.addEventListener('click',e=>{if(done){done=false;return}fn()})}
 function renderResults(text){
   const k=hira(text.trim()),F=frame=compute();
   let res=[];if(k){res=searchIndex().filter(x=>x.key.includes(k)).map(x=>({...x,sc:x.pri+(hira(x.name).startsWith(k)?100:0)}));res.sort((a,b)=>b.sc-a.sc);res=res.slice(0,30)}
+  lastRes=res;
   const ul=$('qres');if(!ul)return;
   if(k&&!res.length){ul.innerHTML='<li class="note">見つかりませんでした。ひらがなやカタカナでも入れてみてね。</li>';return}
   ul.innerHTML=res.map((it,n)=>{const h=objH(it.o),d=dirText(h),below=d.alt<0;
-    return `<li><button data-n="${n}" class="${below?'below':''}"><span class="dot" style="background:${it.o.type==='planet'?PCOL[it.o.name]:it.o.type==='moon'?'#f6efd6':'#9fb0d8'}"></span><span>${it.name}<span class="kind">${it.kind}</span></span><span class="dir">${below?'地平線の下<br>いまは見えない':d.dir+'<br>高さ'+Math.round(d.alt)+'°'}</span></button></li>`}).join('');
-  ul.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>pickResult(res[+b.dataset.n]));
+    return `<li><button data-n="${n}" class="${below?'below':''}${n===0?' top':''}"><span class="dot" style="background:${it.o.type==='planet'?PCOL[it.o.name]:it.o.type==='moon'?'#f6efd6':'#9fb0d8'}"></span><span>${it.name}<span class="kind">${it.kind}</span></span><span class="dir">${below?'地平線の下<br>いまは見えない':d.dir+'<br>高さ'+Math.round(d.alt)+'°'}</span></button></li>`}).join('');
+  ul.querySelectorAll('[data-n]').forEach(b=>onTap(b,()=>pickResult(res[+b.dataset.n])));
 }
-function pickResult(it){if(document.activeElement)document.activeElement.blur();if(S.ar)startGuide(it.o,false);else{showInfo(it.o);flyTo(objH(it.o))}}
+let pickT=0;
+function pickResult(it){if(Date.now()-pickT<400)return;pickT=Date.now();if(document.activeElement)document.activeElement.blur();if(S.ar)startGuide(it.o,false);else{showInfo(it.o);flyTo(objH(it.o))}}
 let guideOn=false;
 async function startGuide(o,wantAR){
   S.sel=o;guideOn=true;closeSheet(true);
@@ -708,7 +720,7 @@ function placeSheet(){
   $('citySel').onchange=e=>{const c=CITIES[+e.target.value];if(!c)return;setPlace(c[1],c[2],c[0],'city');placeSheet()};
 }
 function setPlace(lat,lon,name,src){S.lat=lat;S.lon=lon;S.place=name;S.placeSrc=src;store.set('place',{lat,lon,name,src});updateTop();dirty=true}
-function nearestCity(lat,lon){let b=null;for(const c of CITIES){const d=Math.hypot(c[1]-lat,(c[2]-lon)*Math.cos(lat*D2R));if(!b||d<b.d)b={d,n:c[0]}}return b.d<0.6?b.n+'付近':'現在地'}
+function nearestCity(lat,lon){let b=null;for(const c of CITIES){const d=Math.hypot(c[1]-lat,(c[2]-lon)*Math.cos(lat*D2R));if(!b||d<b.d)b={d,n:c[0]}}return b.d<0.2?b.n+'付近':'現在地'}
 function locate(manual){
   if(!navigator.geolocation){if(manual)msgGps('この画面では位置情報が使えません。都市をえらんでください。');return}
   if(manual)msgGps('現在地をさがしています…');
