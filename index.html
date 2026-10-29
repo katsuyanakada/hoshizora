@@ -85,6 +85,9 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 .guide.found{border-color:#8fe3a8}.guide.found .gt b{color:#8fe3a8}
 .guide .close{position:static;flex:none}
 .qrow{display:flex;gap:8px;align-items:stretch}.qrow .btn{flex:none;font-size:15px;padding:0 16px}
+.seasons{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0 4px}
+.seasons button{border:1px solid var(--edge);background:none;border-radius:10px;padding:7px 0;font-size:13px;color:var(--ink2)}
+.seasons button[aria-pressed="true"]{background:rgba(255,207,107,.14);border-color:rgba(255,207,107,.5);color:var(--gold);font-weight:700}
 .list button.top{background:rgba(255,207,107,.08);border-radius:10px}
 .search{flex:1;min-width:0;width:100%;box-sizing:border-box;font-size:17px;padding:11px 14px;border-radius:12px;border:1px solid var(--edge);background:rgba(255,255,255,.07);-webkit-user-select:text;user-select:text}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
@@ -207,13 +210,30 @@ const DSO=[
  {name:'すばる',ra:56.75,dec:24.12,kind:'星団',text:'おうし座にある星の集まり（プレアデス星団）。目のいい人は6〜7こ数えられます。双眼鏡で見るとすごくきれい！'},
  {name:'オリオン大星雲',ra:83.82,dec:-5.39,kind:'星雲',text:'オリオン座の三つ星の下にある、ぼんやり光るガスの雲。ここで新しい星が生まれています。'},
  {name:'アンドロメダ銀河',ra:10.68,dec:41.27,kind:'銀河',text:'約250万光年先にある、わたしたちの天の川銀河のおとなりの銀河。暗い場所なら肉眼でもぼんやり見えます。'},
+ {name:'プレセペ星団',ra:130.1,dec:19.67,kind:'星団',text:'かに座のまん中にある星の集まり。暗い場所ではぼんやりした雲のように見え、双眼鏡だとたくさんの星がならんでいます。'},
+ {name:'二重星団',ra:34.75,dec:57.13,kind:'星団',text:'ペルセウス座とカシオペヤ座の間にある、2つならんだ星の集まり。双眼鏡で見るととてもきれい。'},
+ {name:'ヘルクレス座球状星団',ra:250.42,dec:36.46,kind:'星団',text:'数十万個の星がボールのように集まった「球状星団」（M13）。望遠鏡で見ると、つぶつぶの星がたくさん見えます。'},
+ {name:'天の川の中心',ra:266.42,dec:-29.0,kind:'天の川',text:'いて座の方向には、わたしたちの天の川銀河の中心があります。夏の夜、暗い場所ではこのあたりの天の川がいちばん太く明るく見えます。'},
+ {name:'しぶんぎ座流星群',ra:230,dec:49,kind:'流星群',hidden:true,text:'1月4日ごろがいちばん多い流星群。流れ星はこの「放射点」から飛び出すように流れます。放射点のまわりだけでなく、空全体をながめるのがコツ。'},
+ {name:'こと座流星群',ra:271,dec:34,kind:'流星群',hidden:true,text:'4月22日ごろがいちばん多い流星群。流れ星はこの「放射点」から飛び出すように流れます。空全体をながめるのがコツ。'},
+ {name:'ペルセウス座流星群',ra:48,dec:58,kind:'流星群',hidden:true,text:'8月13日ごろがいちばん多い、夏休みの流星群。暗い場所なら1時間に30こ以上見えることも。流れ星はこの「放射点」から飛び出すように流れます。'},
+ {name:'オリオン座流星群',ra:95,dec:16,kind:'流星群',hidden:true,text:'10月21日ごろがいちばん多い流星群。ハレー彗星がのこしたちりが流れ星になります。夜中すぎから明け方が見ごろ。'},
+ {name:'しし座流星群',ra:152,dec:22,kind:'流星群',hidden:true,text:'11月17日ごろがいちばん多い流星群。夜中すぎから明け方が見ごろ。流れ星はこの「放射点」から飛び出すように流れます。'},
+ {name:'ふたご座流星群',ra:112,dec:33,kind:'流星群',hidden:true,text:'12月14日ごろがいちばん多い、1年でいちばんたくさん流れ星が見られる流星群。夜8時ごろから見え始めるので子どもにもおすすめ。'},
 ];
 const ASTERISMS=[
- {name:'夏の大三角',stars:['ベガ','デネブ','アルタイル'],text:'こと座のベガ、はくちょう座のデネブ、わし座のアルタイルを結んだ大きな三角形。夏から秋の夜、頭の上あたりに見えます。'},
- {name:'冬の大三角',stars:['ベテルギウス','シリウス','プロキオン'],text:'オリオン座のベテルギウス、おおいぬ座のシリウス、こいぬ座のプロキオンを結んだ三角形。'},
- {name:'秋の四辺形',stars:['アルフェラッツ','シェアト','マルカブ','アルゲニブ'],text:'ペガスス座の胴体の大きな四角形。秋の空の目じるしです。'},
- {name:'春の大曲線',stars:['アルカイド','ミザール','アリオト'],extra:['アルクトゥルス','スピカ'],curve:true,text:'北斗七星の柄のカーブをそのままのばすと、オレンジのアルクトゥルス、白いスピカにたどりつきます。'},
- {name:'北斗七星',stars:['アルカイド','ミザール','アリオト','メグレズ','フェクダ','メラク','ドゥベー','メグレズ'],open:true,text:'おおぐま座の7つの星でできたひしゃくの形。ひしゃくの先を5倍のばすと北極星！'},
+ {name:'夏の大三角',show:true,closed:true,segs:[['ベガ','デネブ','アルタイル']],text:'こと座のベガ、はくちょう座のデネブ、わし座のアルタイルを結んだ大きな三角形。夏から秋の夜、頭の上あたりに見えます。'},
+ {name:'冬の大三角',show:true,closed:true,segs:[['ベテルギウス','シリウス','プロキオン']],text:'オリオン座のベテルギウス、おおいぬ座のシリウス、こいぬ座のプロキオンを結んだ三角形。'},
+ {name:'秋の四辺形',show:true,closed:true,segs:[['アルフェラッツ','シェアト','マルカブ','アルゲニブ']],text:'ペガスス座の胴体の大きな四角形（ペガススの大四辺形）。秋の空の目じるしです。'},
+ {name:'春の大三角',show:true,closed:true,segs:[['アルクトゥルス','スピカ','デネボラ']],text:'うしかい座のアルクトゥルス、おとめ座のスピカ、しし座のデネボラを結んだ三角形。春の夜の目じるしです。'},
+ {name:'北斗七星',show:true,segs:[['アルカイド','ミザール','アリオト','メグレズ','フェクダ','メラク','ドゥベー','メグレズ']],text:'おおぐま座の7つの星でできたひしゃくの形。ひしゃくの先を5倍のばすと北極星！'},
+ {name:'春の大曲線',curve:true,segs:[['アルカイド','ミザール','アリオト','アルクトゥルス','スピカ']],text:'北斗七星の柄のカーブをそのままのばすと、オレンジのアルクトゥルス、白いスピカにたどりつきます。'},
+ {name:'春のダイヤモンド',closed:true,segs:[['コルカロリ','アルクトゥルス','スピカ','デネボラ']],text:'春の大三角に、りょうけん座のコル・カロリを加えたひし形。「おとめ座の大ダイヤモンド」ともよばれます。'},
+ {name:'ししの大がま',segs:[['レグルス',[151.83,16.76],'アルギエバ','アダフェラ',[148.19,26.01],[146.46,23.77]]],text:'しし座の頭の部分。「？」を裏返したような形で、草をかる大きなかまに見たてています。いちばん下がレグルス。'},
+ {name:'冬のダイヤモンド',closed:true,segs:[['シリウス','プロキオン','ポルックス','カペラ','アルデバラン','リゲル']],text:'冬の1等星6つを結んだ大きな六角形（冬の大六角形）。まん中にベテルギウスがあります。'},
+ {name:'オリオンの三つ星',segs:[['ミンタカ','アルニラム','アルニタク']],text:'オリオン座のベルトにあたる、ほぼ同じ明るさの3つの星。まっすぐ東からのぼり、まっすぐ西へしずみます。'},
+ {name:'北十字',segs:[['デネブ','サドル',[299.08,35.08],'アルビレオ'],[[296.24,45.13],'サドル','アルジェナー']],text:'はくちょう座の大きな十字。南半球の「南十字」に対して「北十字」とよばれます。天の川の中にあります。'},
+ {name:'南斗六星',segs:[[[273.44,-21.06],'カウス・ボレアリス',[281.41,-26.99],'ヌンキ',[286.74,-27.67],'アスケラ',[281.41,-26.99]]],text:'いて座の6つの星でできた小さなひしゃく。北斗七星に対して「南斗六星」とよばれます。夏の南の空、天の川の中に見えます。'},
 ];
 const CITIES=[['札幌',43.06,141.35],['旭川',43.77,142.36],['函館',41.77,140.73],['青森',40.82,140.74],['盛岡',39.70,141.15],['秋田',39.72,140.10],['仙台',38.27,140.87],['山形',38.24,140.36],['福島',37.75,140.47],['新潟',37.90,139.02],['水戸',36.34,140.45],['宇都宮',36.57,139.88],['前橋',36.39,139.06],['さいたま',35.86,139.65],['千葉',35.61,140.12],['東京',35.68,139.77],['横浜',35.44,139.64],['甲府',35.66,138.57],['長野',36.65,138.18],['富山',36.70,137.21],['金沢',36.59,136.63],['福井',36.07,136.22],['静岡',34.98,138.38],['浜松',34.71,137.73],['名古屋',35.18,136.91],['岐阜',35.39,136.72],['津',34.73,136.51],['大津',35.00,135.87],['京都',35.02,135.76],['大阪',34.69,135.50],['神戸',34.69,135.18],['奈良',34.69,135.83],['和歌山',34.23,135.17],['鳥取',35.50,134.24],['松江',35.47,133.05],['岡山',34.66,133.93],['広島',34.39,132.46],['山口',34.19,131.47],['徳島',34.07,134.56],['高松',34.34,134.04],['松山',33.84,132.77],['高知',33.56,133.53],['北九州',33.88,130.88],['福岡',33.59,130.40],['久留米',33.32,130.51],['佐賀',33.25,130.30],['長崎',32.75,129.87],['熊本',32.79,130.74],['大分',33.24,131.61],['宮崎',31.91,131.42],['鹿児島',31.60,130.56],['那覇',26.21,127.68]];
 
@@ -313,9 +333,12 @@ function resize(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=inne
 addEventListener('resize',resize);resize();
 
 const STAR_EQ=STARS.map(s=>eqVec(s[0],s[1]));
-const byName={};STARS.forEach((s,i)=>{if(s[4])byName[s[4]]=i});
+const byName={};STARS.forEach((s,i)=>{if(s[4]&&byName[s[4]]==null)byName[s[4]]=i}); // 同じ名前なら明るい方
 const CONS_LIST=Object.entries(CONS).map(([id,c])=>({id,...c,eq:eqVec(c.ra,c.dec),lines:(c.lines||[]).map(seg=>seg.map(p=>eqVec(p[0],p[1])))}));
 const DSO_EQ=DSO.map(o=>({...o,type:'dso',eq:eqVec(o.ra,o.dec)}));
+const astPt=p=>typeof p==='string'?(byName[p]!=null?STAR_EQ[byName[p]]:null):eqVec(p[0],p[1]);
+for(const a of ASTERISMS){a.segsEq=a.segs.map(sg=>{const v=sg.map(astPt);return a.closed?[...v,v[0]]:v});
+  const seen=new Set();a.allEq=[];for(const sg of a.segs)for(const pt of sg){const k=JSON.stringify(pt);if(seen.has(k))continue;seen.add(k);const v=astPt(pt);if(v)a.allEq.push(v)}}
 // 天の川（銀河面）
 const GAL=[[-0.0548755604,-0.8734370902,-0.4838350155],[0.4941094279,-0.4448296300,0.7469822445],[-0.8676661490,-0.1980763734,0.4559837762]];
 const MILKY=[];for(let l=0;l<=360;l+=3){const c=Math.cos(l*D2R),s=Math.sin(l*D2R);
@@ -412,17 +435,16 @@ function render(){
   // 星のならび（アステリズム）
   const selAst=S.sel&&S.sel.type==='asterism'?S.sel.name:null;
   for(const a of ASTERISMS){
-    const isSel=a.name===selAst;if(!S.show.asterisms&&!isSel)continue;
-    if(a.curve&&!isSel)continue;
-    const names=a.curve?[...a.stars,...a.extra]:a.open?a.stars:[...a.stars,a.stars[0]];
-    const ps=names.map(n=>byName[n]!=null?proj(F.stars[byName[n]]):null);
+    const isSel=a.name===selAst;if(!isSel&&!(S.show.asterisms&&a.show))continue;
     ctx.setLineDash(isSel?[]:[5,6]);ctx.lineWidth=isSel?2.4:1.2;ctx.strokeStyle=isSel?'rgba(255,207,107,.95)':'rgba(255,207,107,.38)';
-    ctx.beginPath();let started=false;
-    if(a.curve){const P=ps.filter(Boolean);if(P.length>2){ctx.moveTo(P[0][0],P[0][1]);for(let i=1;i<P.length-1;i++){const mx=(P[i][0]+P[i+1][0])/2,my=(P[i][1]+P[i+1][1])/2;ctx.quadraticCurveTo(P[i][0],P[i][1],mx,my)}ctx.lineTo(P[P.length-1][0],P[P.length-1][1])}}
-    else for(const p of ps){if(!p){started=false;continue}if(!started){ctx.moveTo(p[0],p[1]);started=true}else ctx.lineTo(p[0],p[1])}
+    const allP=[];ctx.beginPath();
+    for(const sg of a.segsEq){const ps=sg.map(v=>v?proj(F.toH(v)):null);allP.push(...ps);
+      if(a.curve){const P=ps.filter(Boolean);if(P.length>2){ctx.moveTo(P[0][0],P[0][1]);for(let i=1;i<P.length-1;i++){const mx=(P[i][0]+P[i+1][0])/2,my=(P[i][1]+P[i+1][1])/2;ctx.quadraticCurveTo(P[i][0],P[i][1],mx,my)}ctx.lineTo(P[P.length-1][0],P[P.length-1][1])}}
+      else{let started=false,prev=null;for(const p of ps){if(!p||(prev&&Math.hypot(p[0]-prev[0],p[1]-prev[1])>Math.max(W,H)*1.5)){started=false;prev=p;if(!p)continue}
+        if(!started){ctx.moveTo(p[0],p[1]);started=true}else ctx.lineTo(p[0],p[1]);prev=p}}}
     ctx.stroke();ctx.setLineDash([]);
-    if(isSel){const P=ps.filter(p=>p&&p[2]>0);if(P.length){const cx=P.reduce((s,p)=>s+p[0],0)/P.length,cy=P.reduce((s,p)=>s+p[1],0)/P.length;
-      label(a.name,cx,cy,'rgba(255,207,107,.95)',14,'center')}}
+    if(isSel){const P=allP.filter(p=>p&&p[2]>0);if(P.length){const cx=P.reduce((s,p)=>s+p[0],0)/P.length,cy=P.reduce((s,p)=>s+p[1],0)/P.length;
+      label(a.name,cx,cy,'rgba(255,207,107,.95)',14,'center',true)}}
   }
   // 星
   const magLim=(S.fov>130?4.2:S.fov>80?4.7:5.0)-(1-starFade)*3;
@@ -442,7 +464,8 @@ function render(){
     }
   }
   // 星雲・星団
-  for(const o of DSO_EQ){const p=proj(F.toH(o.eq));if(!onScreen(p))continue;
+  for(const o of DSO_EQ){if(o.hidden&&!(S.sel&&S.sel.name===o.name))continue;const p=proj(F.toH(o.eq));if(!onScreen(p))continue;
+    if(o.hidden){ctx.strokeStyle='rgba(255,207,107,.9)';ctx.lineWidth=1.5;ctx.beginPath();for(let k=0;k<8;k++){const t=k*Math.PI/4;ctx.moveTo(p[0]+Math.cos(t)*8,p[1]+Math.sin(t)*8);ctx.lineTo(p[0]+Math.cos(t)*20,p[1]+Math.sin(t)*20)}ctx.stroke();label(o.name+'の放射点',p[0],p[1]-26,'#ffcf6b',12,'center',true);continue}
     ctx.strokeStyle='rgba(200,215,255,.55)';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(p[0],p[1],5*z,3.5*z,0.5,0,7);ctx.stroke();
     if(S.show.names&&S.fov<120)label(o.name,p[0]+8*z,p[1]-4,'rgba(200,215,255,.7)',11,'left');
     hits.push({x:p[0],y:p[1],r:20,pri:2,obj:o});}
@@ -521,7 +544,7 @@ function objH(o){
   if(o.type==='planet')return frame.planets.find(p=>p.name===o.name).h;
   if(o.type==='moon')return frame.moon.h;
   if(o.type==='dso')return frame.toH(o.eq);
-  if(o.type==='asterism'){const a=ASTERISMS.find(x=>x.name===o.name);const vs=a.stars.map(n=>frame.stars[byName[n]]).filter(Boolean);
+  if(o.type==='asterism'){const a=ASTERISMS.find(x=>x.name===o.name);const vs=a.allEq.map(frame.toH);
     return nrm(vs.reduce((s,v)=>[s[0]+v[0],s[1]+v[1],s[2]+v[2]],[0,0,0]))}
 }
 function drawSelection(){
@@ -599,9 +622,13 @@ function showInfo(o){
 }
 /* ---------- さがす ---------- */
 const hira=t=>t.replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[・\s　]/g,'').toLowerCase();
-const YOMI={'水星':'すいせい','金星':'きんせい よいのみょうじょう あけのみょうじょう','火星':'かせい','木星':'もくせい','土星':'どせい','天王星':'てんのうせい うらぬす','海王星':'かいおうせい ねぷちゅーん','月':'つき おつきさま',
- '北極星':'ほっきょくせい ぽらりす','すばる':'ぷれあです','夏の大三角':'なつのだいさんかく','冬の大三角':'ふゆのだいさんかく','秋の四辺形':'あきのしへんけい',
- '春の大曲線':'はるのだいきょくせん','北斗七星':'ほくとしちせい','ベガ':'おりひめ','アルタイル':'ひこぼし','オリオン大星雲':'おりおんだいせいうん','アンドロメダ銀河':'あんどろめだぎんが'};
+const YOMI={'夏の大三角':'なつのだいさんかくけい','冬の大三角':'ふゆのだいさんかくけい','春の大三角':'はるのだいさんかくけい','秋の四辺形':'あきのしへんけい ぺがすすのだいしへんけい 大四辺形 秋の大四辺形','冬のダイヤモンド':'ふゆのだいやもんど 冬の大六角形 ふゆのだいろっかくけい','春のダイヤモンド':'はるのだいやもんど おとめ座の大ダイヤモンド',
+ 'オリオンの三つ星':'おりおんのみつぼし 三ツ星 みつぼし','北十字':'きたじゅうじ','南斗六星':'なんとろくせい','ししの大がま':'ししのおおがま','天の川の中心':'あまのがわ 天の川 ぎんがのちゅうしん 銀河',
+ 'プレセペ星団':'ぷれせぺ','二重星団':'にじゅうせいだん','ヘルクレス座球状星団':'へるくれすざきゅうじょうせいだん m13','カシオペヤ座':'かしおぺあ だぶりゅー W','フォーマルハウト':'秋のひとつ星 あきのひとつぼし','スピカ':'真珠星 しんじゅぼし','アルクトゥルス':'麦星 むぎぼし','アンタレス':'さそりの心臓',
+ 'しぶんぎ座流星群':'しぶんぎざりゅうせいぐん 流れ星 ながれぼし','こと座流星群':'ことざりゅうせいぐん 流れ星 ながれぼし','ペルセウス座流星群':'ぺるせうすざりゅうせいぐん 流れ星 ながれぼし','オリオン座流星群':'おりおんざりゅうせいぐん 流れ星 ながれぼし','しし座流星群':'ししざりゅうせいぐん 流れ星 ながれぼし','ふたご座流星群':'ふたござりゅうせいぐん 流れ星 ながれぼし',
+'水星':'すいせい','金星':'きんせい よいのみょうじょう あけのみょうじょう','火星':'かせい','木星':'もくせい','土星':'どせい','天王星':'てんのうせい うらぬす','海王星':'かいおうせい ねぷちゅーん','月':'つき おつきさま',
+ '北極星':'ほっきょくせい ぽらりす','すばる':'ぷれあです 昴 むつらぼし',
+ '春の大曲線':'はるのだいきょくせん','北斗七星':'ほくとしちせい','ベガ':'おりひめ 織姫 たなばた 七夕','アルタイル':'ひこぼし 彦星 たなばた 七夕','オリオン大星雲':'おりおんだいせいうん','アンドロメダ銀河':'あんどろめだぎんが'};
 let SEARCH=null;
 function searchIndex(){
   if(SEARCH)return SEARCH;const L=[];
@@ -616,16 +643,36 @@ function searchIndex(){
   return SEARCH=L;
 }
 function searchSheet(){
-  const quick=['木星','土星','金星','火星','月','北極星','夏の大三角','北斗七星','すばる','オリオン座','さそり座','カシオペヤ座'];
+  const quick=['月','木星','土星','金星','火星','北極星','北斗七星'];
   openSheet('search',`<h3>なにをさがす？</h3>
     <form class="qrow" id="qform" action="#"><input class="search" id="q" type="search" placeholder="例：木星、どせい、オリオン" autocomplete="off" enterkeyhint="search" aria-label="さがしたいもの"><button class="btn primary" type="submit">さがす</button></form>
     <div class="chips">${quick.map(n=>`<button data-q="${n}">${n}</button>`).join('')}</div>
+    <div class="seasons">${['春','夏','秋','冬'].map(x=>`<button data-season="${x}" aria-pressed="${x===curSeason?'true':'false'}">${x}の空</button>`).join('')}</div>
     <ul class="list" id="qres"></ul>`);
   const q=$('q');q.oninput=()=>renderResults(q.value);
   $('qform').onsubmit=e=>{e.preventDefault();renderResults(q.value);
     if(lastRes.length)pickResult(lastRes[0]);else if(!q.value.trim())q.focus()};
   $('sheetBody').querySelectorAll('[data-q]').forEach(b=>onTap(b,()=>{const it=searchIndex().find(x=>x.name===b.dataset.q);if(it)pickResult(it)}));
+  $('sheetBody').querySelectorAll('[data-season]').forEach(b=>onTap(b,()=>{curSeason=b.dataset.season;
+    $('sheetBody').querySelectorAll('[data-season]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));q.value='';renderResults('')}));
   renderResults('');
+}
+const SEASON_LIST={
+ '春':['春の大三角','春の大曲線','春のダイヤモンド','北斗七星','ししの大がま','しし座','おとめ座','うしかい座','アルクトゥルス','スピカ','レグルス','プレセペ星団','こと座流星群'],
+ '夏':['夏の大三角','北十字','南斗六星','天の川の中心','さそり座','いて座','はくちょう座','こと座','わし座','ベガ','アルタイル','デネブ','アンタレス','アルビレオ','ヘルクレス座球状星団','ペルセウス座流星群'],
+ '秋':['秋の四辺形','カシオペヤ座','ペガスス座','アンドロメダ座','ペルセウス座','アンドロメダ銀河','二重星団','フォーマルハウト','みなみのうお座','オリオン座流星群','しし座流星群'],
+ '冬':['冬の大三角','冬のダイヤモンド','オリオンの三つ星','オリオン座','おうし座','ふたご座','おおいぬ座','ぎょしゃ座','シリウス','ベテルギウス','リゲル','すばる','オリオン大星雲','ふたご座流星群','しぶんぎ座流星群'],
+};
+let curSeason=(m=>m>=3&&m<=5?'春':m>=6&&m<=8?'夏':m>=9&&m<=11?'秋':'冬')(new Date().getMonth()+1);
+function matchScore(x,k){
+  const nk=hira(x.name);
+  if(x.key.includes(k))return x.pri+(nk.startsWith(k)?100:0)+(nk===k?200:0);
+  const k2=k.replace(/(けい|形|座|ざ|の星|ぼし)$/,'');
+  if(k2.length>=2&&x.key.includes(k2))return x.pri+50;
+  if(nk.length>=2&&k.includes(nk))return x.pri+40; // 入力のほうが長いとき（例：夏の大三角形）
+  if(k.length>=3){const bg=t=>{const r=new Set();for(let i=0;i<t.length-1;i++)r.add(t.slice(i,i+2));return r};
+    const A=bg(k),B=bg(x.key);let c=0;A.forEach(g=>{if(B.has(g))c++});if(c/A.size>=0.6)return x.pri*0.3+c}
+  return -1;
 }
 let lastRes=[];
 const SEARCH_NOTES=[
@@ -640,13 +687,14 @@ function onTap(el,fn){let st=null,done=false;
   el.addEventListener('click',e=>{if(done){done=false;return}fn()})}
 function renderResults(text){
   const k=hira(text.trim()),F=frame=compute();
-  let res=[];if(k){res=searchIndex().filter(x=>x.key.includes(k)).map(x=>({...x,sc:x.pri+(hira(x.name).startsWith(k)?100:0)}));res.sort((a,b)=>b.sc-a.sc);res=res.slice(0,30)}
-  lastRes=res;
+  let res=[];if(k){res=searchIndex().map(x=>({...x,sc:matchScore(x,k)})).filter(x=>x.sc>=0);res.sort((a,b)=>b.sc-a.sc);res=res.slice(0,30)}
+  else{const idx=searchIndex();res=SEASON_LIST[curSeason].map(n=>idx.find(x=>x.name===n)).filter(Boolean)}
+  lastRes=k?res:[];
   const ul=$('qres');if(!ul)return;
   if(k&&!res.length){const nt=SEARCH_NOTES.find(n=>n[0].some(w=>w.includes(k)||k.includes(w)));
     ul.innerHTML='<li class="note">'+(nt?nt[1]:'見つかりませんでした。ひらがなやカタカナでも入れてみてね。')+'</li>';return}
   ul.innerHTML=res.map((it,n)=>{const h=objH(it.o),d=dirText(h),below=d.alt<0;
-    return `<li><button data-n="${n}" class="${below?'below':''}${n===0?' top':''}"><span class="dot" style="background:${it.o.type==='planet'?PCOL[it.o.name]:it.o.type==='moon'?'#f6efd6':'#9fb0d8'}"></span><span>${it.name}<span class="kind">${it.kind}</span></span><span class="dir">${below?'地平線の下<br>いまは見えない':d.dir+'<br>高さ'+Math.round(d.alt)+'°'}</span></button></li>`}).join('');
+    return `<li><button data-n="${n}" class="${below?'below':''}${n===0&&k?' top':''}"><span class="dot" style="background:${it.o.type==='planet'?PCOL[it.o.name]:it.o.type==='moon'?'#f6efd6':'#9fb0d8'}"></span><span>${it.name}<span class="kind">${it.kind}</span></span><span class="dir">${below?'地平線の下<br>いまは見えない':d.dir+'<br>高さ'+Math.round(d.alt)+'°'}</span></button></li>`}).join('');
   ul.querySelectorAll('[data-n]').forEach(b=>onTap(b,()=>pickResult(res[+b.dataset.n])));
 }
 let pickT=0;
@@ -689,10 +737,10 @@ function tonightList(){
   const add=(o,name,kind,col,h,score)=>{const a=altOf(h);if(a<3)return;const d=dirText(h);items.push({o,name,kind,col,dir:d.dir,alt:a,score})};
   add(F.moon,'月','月齢'+F.moon.age.toFixed(0),'#f6efd6',F.moon.h,100);
   for(const p of F.planets)if(p.mag<4)add(p,p.name,'惑星',p.color,p.h,90-p.mag);
-  for(const a of ASTERISMS){if(a.curve)continue;const vs=a.stars.map(n=>F.stars[byName[n]]);if(vs.every(v=>altOf(v)>8))add({type:'asterism',name:a.name},a.name,'星のならび','#ffcf6b',objH({type:'asterism',name:a.name}),70)}
+  for(const a of ASTERISMS){if(!a.show)continue;const vs=a.allEq.map(F.toH);if(vs.every(v=>altOf(v)>8))add({type:'asterism',name:a.name},a.name,'星のならび','#ffcf6b',objH({type:'asterism',name:a.name}),70)}
   if(S.lat>5)add({type:'star',i:byName['北極星']},'北極星','北の目じるし','#fff6ec',F.stars[byName['北極星']],65);
   STARS.forEach((s,i)=>{if(s[2]<1.6&&s[4]&&s[4]!=='北極星')add({type:'star',i},s[4],magWord(s[2]).replace(/（.*/,'')+'・'+consName(s[5]),bvColor(s[3]),F.stars[i],50-s[2])});
-  for(const o of DSO_EQ)add(o,o.name,o.kind,'#c8d7ff',F.toH(o.eq),40);
+  for(const o of DSO_EQ)if(!o.hidden)add(o,o.name,o.kind,'#c8d7ff',F.toH(o.eq),40);
   items.sort((a,b)=>b.score-a.score);
   const sunAlt=altOf(F.sun),d=new Date(F.t);
   openSheet('tonight',`<h3>${d.getMonth()+1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')} に見えるもの</h3>
