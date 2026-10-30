@@ -77,6 +77,20 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 .toggle{display:flex;justify-content:space-between;align-items:center;padding:10px 2px;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px}
 .toggle input{width:20px;height:20px;accent-color:var(--gold)}
 .note{font-size:12px;color:var(--ink2);line-height:1.7;margin-top:10px}
+.tour{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 76px);max-width:520px;margin-inline:auto;
+  background:var(--panel);border:1px solid rgba(255,207,107,.5);border-radius:18px;padding:12px 14px 12px;box-shadow:0 10px 36px rgba(0,0,0,.55);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.tour .th{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2)}
+.tour .th .close{position:static;margin-left:auto;width:30px;height:30px;font-size:16px}
+.tour .bar2{height:3px;border-radius:2px;background:rgba(255,255,255,.08);margin:8px 0 10px;overflow:hidden}
+.tour .bar2 i{display:block;height:100%;background:var(--gold);width:0}
+.tour h2{margin:0;font-size:19px;color:var(--gold)}
+.tour p{margin:6px 0 0;font-size:15px;line-height:1.75}
+.tour .where2{font-size:12px;color:var(--ink2);margin-top:6px}
+.tour .ctl{display:grid;grid-template-columns:1fr 1.3fr 1fr auto;gap:8px;margin-top:12px}
+.tour .ctl .btn{padding:10px 0;font-size:14px}
+.tour .ctl .snd{width:44px;padding:0}
+.tourStart{width:100%;margin:8px 0 2px;padding:12px;font-size:15px}
 .guide{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 76px);max-width:520px;margin-inline:auto;
   display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid rgba(255,207,107,.5);border-radius:16px;padding:10px 10px 10px 14px;
   box-shadow:0 8px 30px rgba(0,0,0,.5)}
@@ -112,6 +126,12 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 
 <div class="sheet" id="sheet" hidden role="dialog"><button class="close" id="closeSheet" aria-label="とじる">×</button><div id="sheetBody"></div></div>
 
+<div class="tour" id="tour" hidden aria-live="polite">
+  <div class="th"><span id="tourHead"></span><button class="close" id="tourClose" aria-label="ツアーをおわる">×</button></div>
+  <div class="bar2"><i id="tourBar"></i></div>
+  <div id="tourBody"></div>
+  <div class="ctl" id="tourCtl"><button class="btn" id="tourPrev">← 前へ</button><button class="btn primary" id="tourPlay">一時停止</button><button class="btn" id="tourNext">次へ →</button><button class="btn snd" id="tourSnd" aria-label="声の案内" aria-pressed="true">声</button></div>
+</div>
 <div class="guide" id="guide" hidden><div class="gt" id="guideText"></div><button class="btn primary" id="guideAr" hidden>かざしてさがす</button><button class="close" id="guideClose" aria-label="さがすのをやめる">×</button></div>
 <nav class="bar">
   <button id="arBtn" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M10.5 18.5h3"/><path d="M12 6l1 2 2 .3-1.5 1.4.4 2.1-1.9-1-1.9 1 .4-2.1L9 8.3l2-.3z"/></svg>かざす</button>
@@ -599,6 +619,7 @@ $('closeSheet').onclick=()=>closeSheet();
 function magWord(m){return m<1.5?'1等星（とくに明るい星）':`${Math.round(m)}等星`}
 function consName(code){const c=CONS[code];return c?c.ja:''}
 function showInfo(o){
+  if(TOUR)tourPause();
   S.sel=o;dirty=true;render();
   const h=objH(o),dt=dirText(h);let title='',kind='',tags=[],text='';
   if(o.type==='star'){const s=STARS[o.i];title=s[4];kind=consName(s[5])||'星';tags=[magWord(s[2]),bvWord(s[3])+'星'];text=FACTS[s[4]]||`${consName(s[5])||''}の星です。`}
@@ -648,13 +669,16 @@ function searchSheet(){
     <form class="qrow" id="qform" action="#"><input class="search" id="q" type="search" placeholder="例：木星、どせい、オリオン" autocomplete="off" enterkeyhint="search" aria-label="さがしたいもの"><button class="btn primary" type="submit">さがす</button></form>
     <div class="chips">${quick.map(n=>`<button data-q="${n}">${n}</button>`).join('')}</div>
     <div class="seasons">${['春','夏','秋','冬'].map(x=>`<button data-season="${x}" aria-pressed="${x===curSeason?'true':'false'}">${x}の空</button>`).join('')}</div>
+    <button class="btn primary tourStart" id="tourStart">${curSeason}の星空ツアーをはじめる</button>
     <ul class="list" id="qres"></ul>`);
   const q=$('q');q.oninput=()=>renderResults(q.value);
   $('qform').onsubmit=e=>{e.preventDefault();renderResults(q.value);
     if(lastRes.length)pickResult(lastRes[0]);else if(!q.value.trim())q.focus()};
   $('sheetBody').querySelectorAll('[data-q]').forEach(b=>onTap(b,()=>{const it=searchIndex().find(x=>x.name===b.dataset.q);if(it)pickResult(it)}));
   $('sheetBody').querySelectorAll('[data-season]').forEach(b=>onTap(b,()=>{curSeason=b.dataset.season;
-    $('sheetBody').querySelectorAll('[data-season]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));q.value='';renderResults('')}));
+    $('sheetBody').querySelectorAll('[data-season]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));q.value='';renderResults('');
+    $('tourStart').textContent=curSeason+'の星空ツアーをはじめる'}));
+  onTap($('tourStart'),()=>startTour(curSeason));
   renderResults('');
 }
 const SEASON_LIST={
@@ -708,6 +732,7 @@ async function startGuide(o,wantAR){
 }
 function selName(o){return o.type==='star'?STARS[o.i][4]:o.type==='cons'?CONS[o.id].ja:o.name}
 function updateGuide(){
+  $('tour').hidden=!(TOUR&&$('sheet').hidden);
   const g=$('guide');const show=guideOn&&S.sel&&$('sheet').hidden;g.hidden=!show;if(!show)return;
   const h=objH(S.sel),d=dirText(h),off=Math.acos(Math.max(-1,Math.min(1,dot(h,cam.f))))*R2D;
   const found=S.ar&&off<7&&d.alt>0;g.classList.toggle('found',found);
@@ -723,12 +748,166 @@ $('guideClose').onclick=()=>{guideOn=false;S.sel=null;dirty=true};
 $('guideAr').onclick=()=>startGuide(S.sel,true);
 $('searchBtn').onclick=()=>sheetKind==='search'?closeSheet():searchSheet();
 
-function flyTo(h){
-  if(S.ar)return;const taz=azOf(h),talt=Math.max(-20,Math.min(85,altOf(h)));
-  const a0=S.az,h0=S.alt;let da=((taz-a0+540)%360)-180;const t0=performance.now();
+/* ---------- 星空ツアー ---------- */
+const TOURS={
+ '春':[
+  ['北斗七星','北の空の高いところを見上げてみよう。7つの星でできた大きなひしゃくの形、北斗七星だよ。春の星さがしのスタート地点！'],
+  ['北極星','ひしゃくの先にある2つの星の間を、5倍のばしてみよう。そこにあるのが北極星。いつも真北にあって、ほとんど動かない星だよ。'],
+  ['春の大曲線','こんどは、ひしゃくの柄のカーブを、そのまま南のほうへのばしてみよう。大きなカーブを描くと…'],
+  ['アルクトゥルス','オレンジ色に明るく光る星にたどりつくよ。うしかい座のアルクトゥルス。「麦星」ともよばれるよ。'],
+  ['スピカ','カーブをもっとのばすと、白く光るスピカ。おとめ座の星で「真珠星」ともよばれるよ。これで春の大曲線のできあがり！'],
+  ['ししの大がま','西の空に目をうつそう。はてなマークを裏返したような星のならびがあるよ。これは「ししの大がま」。しし座の頭だよ。'],
+  ['レグルス','大がまのいちばん下の明るい星がレグルス。ライオンの心臓で、「小さな王さま」という意味だよ。'],
+  ['春の大三角','しし座のしっぽの星デネボラ、それにアルクトゥルスとスピカを結ぶと、春の大三角になるよ。'],
+  ['プレセペ星団','しし座の西どなり、かに座の中に、ぼんやり光るところがあるよ。たくさんの星の集まり、プレセペ星団。双眼鏡で見てみよう。'],
+ ],
+ '夏':[
+  ['ベガ','頭の上のあたりで、いちばん明るく白く光る星をさがしてみよう。それがベガ。七夕のおりひめ星だよ。'],
+  ['アルタイル','ベガから南東のほうへ目をうつすと、両どなりに小さな星をつれた明るい星。これがアルタイル、ひこ星だよ。'],
+  ['デネブ','ベガとアルタイルの間の、少し東にあるのがデネブ。はくちょう座のしっぽの星だよ。'],
+  ['夏の大三角','ベガ、アルタイル、デネブの3つを結ぶと、大きな三角形。これが夏の大三角！'],
+  ['北十字','デネブから天の川にそって、大きな十字の形がのびているよ。白鳥が天の川を飛んでいる姿、はくちょう座。北十字ともよばれるよ。'],
+  ['アルビレオ','十字の先っぽ、白鳥のくちばしの星がアルビレオ。望遠鏡で見ると、オレンジと青の2つの星がならんでいるよ。'],
+  ['さそり座','南の低い空を見てみよう。S字の形にならんだ星たちがさそり座だよ。'],
+  ['アンタレス','さそりの心臓で赤く光るのがアンタレス。火星とライバルの赤い星だよ。'],
+  ['南斗六星','さそりのしっぽの東どなりに、小さなひしゃくの形。いて座の南斗六星だよ。'],
+  ['天の川の中心','いて座のあたりは、天の川がいちばん太く明るいところ。この方向に、わたしたちの銀河の中心があるんだよ。'],
+ ],
+ '秋':[
+  ['秋の四辺形','まずは頭の上を見上げてみよう。大きな四角形が見えるかな？これはペガスス座の胴体、秋の四辺形。秋の星さがしのスタート地点だよ。'],
+  ['アンドロメダ座','四角形の北東のかどの星から、星が2本の線のように東へのびているよ。これがお姫さまの星座、アンドロメダ座。'],
+  ['アンドロメダ銀河','アンドロメダ座の線をたどった先に、ぼんやりした光のしみ。約250万光年先にある、おとなりの銀河だよ。暗い場所なら目でも見えるかも。'],
+  ['カシオペヤ座','北の空の高いところに、Wの形をした5つの星。カシオペヤ座だよ。'],
+  ['北極星','カシオペヤのWを使っても北極星が見つかるよ。北の空で、ほとんど動かない星が北極星。'],
+  ['ペルセウス座','カシオペヤの東どなりにいるのが、アンドロメダ姫を助けた勇者ペルセウス。夏のペルセウス座流星群は、この方向から流れてくるよ。'],
+  ['フォーマルハウト','南の低い空を見てみよう。ぽつんとひとつだけ明るい星。秋のひとつ星、フォーマルハウトだよ。'],
+  ['夏の大三角','西の空には、まだ夏の大三角が残っているよ。夏から秋への、季節のバトンタッチだね。'],
+  ['すばる','東の空からは、冬の星すばるがのぼってくるよ。小さな星がいくつ数えられるかな？'],
+ ],
+ '冬':[
+  ['オリオン座','南の空に、砂時計のような形の星座が見えるかな？冬の王さま、オリオン座だよ。'],
+  ['オリオンの三つ星','まん中に、同じ明るさの星が3つきれいにならんでいるね。これがオリオンの三つ星。'],
+  ['ベテルギウス','オリオンの肩で、赤っぽく光るのがベテルギウス。'],
+  ['リゲル','反対側の足もとで、青白く光るのがリゲル。ベテルギウスと色をくらべてみよう。'],
+  ['オリオン大星雲','三つ星の下に、小さな星のたてのならびがあるよ。そのまん中のぼんやりした光がオリオン大星雲。ここで新しい星が生まれているんだ。'],
+  ['シリウス','三つ星を左下のほうへのばしていくと、夜空でいちばん明るい星。おおいぬ座のシリウスだよ。'],
+  ['プロキオン','ベテルギウスの東のほうにある明るい星が、こいぬ座のプロキオン。'],
+  ['冬の大三角','ベテルギウス、シリウス、プロキオンを結ぶと、冬の大三角！'],
+  ['アルデバラン','こんどは三つ星を右上のほうへのばしてみよう。オレンジ色の星アルデバラン。おうし座の目だよ。'],
+  ['すばる','そのまま、もう少しのばすと、小さな星がぎゅっと集まったすばる。いくつ数えられるかな？'],
+  ['ふたご座','オリオンの左上には、ならんだ2つの明るい星。ふたご座の兄弟、カストルとポルックスだよ。'],
+  ['冬のダイヤモンド','シリウス、プロキオン、ポルックス、カペラ、アルデバラン、リゲル。6つの1等星を結ぶと、大きな冬のダイヤモンドのできあがり！'],
+ ],
+};
+const TOUR_DATE={'春':[4,20,21],'夏':[8,5,21],'秋':[10,25,20],'冬':[1,20,20]};
+const seasonOf=d=>(m=>m>=3&&m<=5?'春':m>=6&&m<=8?'夏':m>=9&&m<=11?'秋':'冬')(d.getMonth()+1);
+let TOUR=null;
+function tourTime(season){
+  const now=new Date();
+  if(season===seasonOf(now)){
+    if(altOf(computeAt(now.getTime()).sun)<-12)return null; // いまが夜なら、いまの空で
+    const d=new Date(now);d.setHours(TOUR_DATE[season][2],0,0,0);if(d<now)d.setDate(d.getDate()+1);return d.getTime();
+  }
+  const [m,dd,h]=TOUR_DATE[season];const d=new Date(now.getFullYear(),m-1,dd,h);if(d<now)d.setFullYear(d.getFullYear()+1);return d.getTime();
+}
+function tourFov(o){return o.type==='asterism'?95:o.type==='cons'?75:o.type==='dso'?45:55}
+function startTour(season){
+  stopTour(true);
+  const t=tourTime(season),prevT=S.fixedT;if(t!=null)S.fixedT=t;
+  const F=frame=compute(),idx=searchIndex(),steps=[];
+  for(const [n,txt] of TOURS[season]){const it=idx.find(x=>x.name===n);if(!it)continue;const h=objH(it.o);if(!h||altOf(h)<3)continue;steps.push({name:n,o:it.o,text:txt})}
+  // その夜に見えている明るい惑星も紹介
+  for(const p of F.planets)if(p.mag<1.6&&altOf(p.h)>5)steps.push({name:p.name,o:{type:'planet',name:p.name},text:`この夜は${p.name}も見えているよ。${PLANET_FACTS[p.name].split('。')[0]}。星とちがってチカチカしないのが目じるし。`});
+  const d=new Date(nowT());
+  TOUR={season,steps,i:-1,playing:true,timer:0,prevT,changedTime:t!=null,snd:store.get('tourSnd',true),
+    when:`${d.getMonth()+1}月${d.getDate()}日 ${d.getHours()}時の空`};
+  closeSheet();if(S.ar){/* かざすモードでは自分のペースで */TOUR.playing=false}
+  updateTop();tourIntro();
+}
+function tourIntro(){
+  TOUR.i=-1;
+  const txt=`${TOUR.season}の星空ツアーへようこそ！${TOUR.changedTime?TOUR.when+'で案内するね。':'いまの空で案内するね。'}${S.ar?'スマホを空にかざして、矢印の方をさがしてね。見つけたら「次へ」をおしてね。':'全部で'+TOUR.steps.length+'か所をめぐるよ。'}`;
+  $('tourHead').textContent=`${TOUR.season}の星空ツアー`;
+  $('tourBody').innerHTML=`<h2>はじまり</h2><p>${txt}</p>`;
+  S.sel=null;guideOn=false;dirty=true;tourSay(txt,()=>tourGo(0));tourButtons();
+}
+function tourGo(i){
+  if(!TOUR)return;clearTimeout(TOUR.timer);
+  if(i>=TOUR.steps.length)return tourEnd();
+  if(i<0)return tourIntro();
+  TOUR.i=i;const st=TOUR.steps[i];S.sel=st.o;guideOn=false;
+  const h=objH(st.o);
+  const d=dirText(h);
+  $('tourHead').textContent=`${TOUR.season}の星空ツアー　${i+1} / ${TOUR.steps.length}`;
+  $('tourBody').innerHTML=`<h2>${st.name}</h2><p>${st.text}</p><div class="where2">${d.dir}の空・高さ${Math.round(d.alt)}°（にぎりこぶし約${Math.max(1,Math.round(d.alt/10*2)/2)}こ分）</div>`;
+  tourButtons();dirty=true;
+  $('tour').hidden=false;const cardTop=$('tour').getBoundingClientRect().top;
+  flyTo(h,tourFov(st.o),(60+cardTop)/2);
+  tourSay(st.text,()=>tourGo(i+1));
+}
+function tourEnd(){
+  TOUR.i=TOUR.steps.length;S.sel=null;dirty=true;
+  const txt=`これで${TOUR.season}の星空ツアーはおしまい。見つけられた星はいくつあったかな？`;
+  $('tourHead').textContent=`${TOUR.season}の星空ツアー`;
+  $('tourBody').innerHTML=`<h2>おしまい</h2><p>${txt}</p><div class="row">${TOUR.changedTime?'<button class="btn primary" id="tourBackNow">いまの時間にもどる</button>':''}<button class="btn" id="tourAgain">もう一度</button></div>`;
+  if($('tourBackNow'))$('tourBackNow').onclick=()=>{S.fixedT=null;updateTop();stopTour(true)};
+  $('tourAgain').onclick=()=>{TOUR.playing=!S.ar;tourIntro()};
+  TOUR.playing=false;tourButtons();tourSay(txt,null);
+}
+// 読み上げ（声オフのときは文章の長さで待つ）
+let barRAF=0;
+function tourSay(txt,next){
+  if(!TOUR)return;clearTimeout(TOUR.timer);cancelAnimationFrame(barRAF);
+  try{speechSynthesis.cancel()}catch(e){}
+  const bar=$('tourBar');bar.style.width='0';
+  const auto=()=>{if(TOUR&&TOUR.playing&&next)TOUR.timer=setTimeout(next,1800)};
+  const ms=Math.max(6000,txt.length*150);
+  if(TOUR.snd&&'speechSynthesis' in window){
+    const u=new SpeechSynthesisUtterance(txt.replace(/！/g,'。'));u.lang='ja-JP';u.rate=0.95;
+    const v=speechSynthesis.getVoices().find(v=>/ja/i.test(v.lang));if(v)u.voice=v;
+    const t0=performance.now();const tick=()=>{bar.style.width=Math.min(100,(performance.now()-t0)/ms*100)+'%';barRAF=requestAnimationFrame(tick)};tick();
+    let ended=false;u.onend=()=>{if(ended)return;ended=true;cancelAnimationFrame(barRAF);bar.style.width='100%';auto()};
+    TOUR.timer=setTimeout(()=>{if(!ended){ended=true;cancelAnimationFrame(barRAF);bar.style.width='100%';auto()}},ms+8000); // 念のため
+    speechSynthesis.speak(u);
+  }else{
+    if(!TOUR.playing||!next){bar.style.width='0';return}
+    const t0=performance.now();const tick=()=>{const k=(performance.now()-t0)/ms;bar.style.width=Math.min(100,k*100)+'%';if(k<1)barRAF=requestAnimationFrame(tick)};tick();
+    TOUR.timer=setTimeout(next,ms);
+  }
+}
+function tourButtons(){
+  if(!TOUR)return;const end=TOUR.i>=TOUR.steps.length;
+  $('tourCtl').hidden=end;
+  $('tourPlay').textContent=S.ar?'見つけた！次へ':TOUR.playing?'一時停止':'再生';
+  $('tourPlay').classList.toggle('primary',true);
+  $('tourNext').hidden=S.ar;
+  $('tourSnd').setAttribute('aria-pressed',String(TOUR.snd));$('tourSnd').textContent=TOUR.snd?'声':'無音';
+  $('tourPrev').disabled=TOUR.i<0;
+}
+function tourPause(){if(!TOUR)return;TOUR.playing=false;clearTimeout(TOUR.timer);cancelAnimationFrame(barRAF);try{speechSynthesis.cancel()}catch(e){};tourButtons()}
+function stopTour(keepTime){
+  if(!TOUR)return;tourPause();
+  if(!keepTime&&TOUR.changedTime){S.fixedT=TOUR.prevT;updateTop()}
+  TOUR=null;S.sel=null;$('tour').hidden=true;dirty=true;
+}
+$('tourClose').onclick=()=>stopTour(false);
+$('tourNext').onclick=()=>{if(!TOUR)return;tourGo(TOUR.i+1)};
+$('tourPrev').onclick=()=>{if(!TOUR)return;tourGo(TOUR.i-1)};
+$('tourPlay').onclick=()=>{if(!TOUR)return;
+  if(S.ar){tourGo(TOUR.i+1);return}
+  if(TOUR.playing)tourPause();else{TOUR.playing=true;tourGo(Math.max(0,TOUR.i))}};
+$('tourSnd').onclick=()=>{if(!TOUR)return;TOUR.snd=!TOUR.snd;store.set('tourSnd',TOUR.snd);if(!TOUR.snd)try{speechSynthesis.cancel()}catch(e){}
+  tourButtons();if(TOUR.playing)tourGo(TOUR.i)};
+
+function flyTo(h,fov,yT){
+  if(S.ar)return;const f1=fov||(S.fov>140?100:S.fov);
+  // yT: 画面のこの高さに目標が来るように、見る中心を少し下げる（下に案内カードがあるとき）
+  const shift=yT!=null?Math.max(0,(H/2-yT))*f1/Math.min(W,H):0;
+  const taz=azOf(h),talt=Math.max(-20,Math.min(85,altOf(h)-shift));
+  const a0=S.az,h0=S.alt,f0=S.fov;let da=((taz-a0+540)%360)-180;const t0=performance.now();
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const step=now=>{const k=reduce?1:Math.min(1,(now-t0)/700),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
-    S.az=norm360(a0+da*e);S.alt=h0+(talt-h0)*e;if(S.fov>140)S.fov=100;dirty=true;if(k<1)requestAnimationFrame(step);else saveView()};
+  const dur=fov?1400:700;const step=now=>{const k=reduce?1:Math.min(1,(now-t0)/dur),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    S.az=norm360(a0+da*e);S.alt=h0+(talt-h0)*e;S.fov=f0+(f1-f0)*e;dirty=true;if(k<1)requestAnimationFrame(step);else saveView()};
   requestAnimationFrame(step);
 }
 
