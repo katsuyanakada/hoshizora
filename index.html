@@ -107,6 +107,11 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
 .chips button{border:1px solid var(--edge);background:rgba(255,255,255,.05);border-radius:999px;padding:6px 11px;font-size:13px}
 .list button.below{opacity:.55}
+html.ar .banner{top:calc(env(safe-area-inset-top,0px) + 100px)}
+.calbtn{position:fixed;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);border-color:rgba(255,207,107,.5);color:var(--gold)}
+.calmsg{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 100px);max-width:480px;margin-inline:auto;background:var(--panel);
+  border:1px solid rgba(255,207,107,.5);border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.7;pointer-events:none}
+.calmsg b{display:block;color:var(--gold);font-size:15px}
 .toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--edge);
   padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.6;max-width:calc(100vw - 48px);text-align:center;pointer-events:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -123,6 +128,8 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 </div>
 <div class="banner" id="banner" hidden></div>
 <div class="toast" id="toast" hidden></div>
+<button class="chip calbtn" id="calBtn" hidden>方位を合わせる</button>
+<div class="calmsg" id="calMsg" hidden><b>方位を合わせよう</b>① 空の本物の明るい星（または月）に、画面まん中の丸を向ける<br>② そのまま、画面の中でその星をタップ</div>
 
 <div class="sheet" id="sheet" hidden role="dialog"><button class="close" id="closeSheet" aria-label="とじる">×</button><div id="sheetBody"></div></div>
 
@@ -231,7 +238,14 @@ const DSO=[
  {name:'オリオン大星雲',ra:83.82,dec:-5.39,kind:'星雲',text:'オリオン座の三つ星の下にある、ぼんやり光るガスの雲。ここで新しい星が生まれています。'},
  {name:'アンドロメダ銀河',ra:10.68,dec:41.27,kind:'銀河',text:'約250万光年先にある、わたしたちの天の川銀河のおとなりの銀河。暗い場所なら肉眼でもぼんやり見えます。'},
  {name:'プレセペ星団',ra:130.1,dec:19.67,kind:'星団',text:'かに座のまん中にある星の集まり。暗い場所ではぼんやりした雲のように見え、双眼鏡だとたくさんの星がならんでいます。'},
- {name:'二重星団',ra:34.75,dec:57.13,kind:'星団',text:'ペルセウス座とカシオペヤ座の間にある、2つならんだ星の集まり。双眼鏡で見るととてもきれい。'},
+ {name:'二重星団',ra:34.75,dec:57.13,kind:'星団',text:'ペルセウス座とカシオペヤ座の間にある、2つならんだ星の集まり。h（エイチ）とχ（カイ）という名前がついていて、「エイチ・カイ」ともよばれます。双眼鏡で見るととてもきれい。'},
+ {name:'ガーネットスター',ra:325.88,dec:58.78,kind:'星・ケフェウス座',star:true,text:'ケフェウス座のμ（ミュー）星。天王星を見つけたハーシェルが「ざくろ石（ガーネット）のように赤い」と言ったことからこの名前に。目で見える星の中で、とても赤い星のひとつです。双眼鏡で見ると赤さがよくわかります。太陽の1000倍以上も大きな星です。'},
+ {name:'アルコル',ra:201.31,dec:54.99,kind:'星・おおぐま座',star:true,text:'北斗七星のミザールのすぐとなりにある小さな星。昔は、ミザールとアルコルが2つに見えるかで目のよさをためしたそうです。見えるかな？'},
+ {name:'ミラ',ra:34.84,dec:-2.98,kind:'星・くじら座',star:true,text:'くじら座のο（オミクロン）星。約11か月ごとに明るさが大きく変わる「ふしぎな星」。明るいときは2等星くらいなのに、暗いときは目では見えなくなります。'},
+ {name:'ダブルダブル',ra:281.08,dec:39.67,kind:'二重星・こと座',star:true,text:'ベガのすぐ近くにある、こと座のε（イプシロン）星。双眼鏡で2つに分かれ、望遠鏡で見るとそれぞれがさらに2つに分かれて、全部で4つの星に見えます。'},
+ {name:'リング星雲',ra:283.40,dec:33.03,kind:'星雲',text:'こと座にある、ドーナツの形の星雲（M57）。年をとった星が外側のガスを吹き出してできました。望遠鏡で見えます。'},
+ {name:'あれい状星雲',ra:299.90,dec:22.72,kind:'星雲',text:'こぎつね座にある、運動で使う鉄アレイのような形の星雲（M27）。望遠鏡で見えます。'},
+ {name:'干潟星雲',ra:270.92,dec:-24.38,kind:'星雲',text:'いて座の天の川の中にある、明るいガスの雲（M8）。双眼鏡でもぼんやり見えます。'},
  {name:'ヘルクレス座球状星団',ra:250.42,dec:36.46,kind:'星団',text:'数十万個の星がボールのように集まった「球状星団」（M13）。望遠鏡で見ると、つぶつぶの星がたくさん見えます。'},
  {name:'天の川の中心',ra:266.42,dec:-29.0,kind:'天の川',text:'いて座の方向には、わたしたちの天の川銀河の中心があります。夏の夜、暗い場所ではこのあたりの天の川がいちばん太く明るく見えます。'},
  {name:'しぶんぎ座流星群',ra:230,dec:49,kind:'流星群',hidden:true,text:'1月4日ごろがいちばん多い流星群。流れ星はこの「放射点」から飛び出すように流れます。放射点のまわりだけでなく、空全体をながめるのがコツ。'},
@@ -485,6 +499,7 @@ function render(){
   }
   // 星雲・星団
   for(const o of DSO_EQ){if(o.hidden&&!(S.sel&&S.sel.name===o.name))continue;const p=proj(F.toH(o.eq));if(!onScreen(p))continue;
+    if(o.star){if(S.show.names&&S.fov<75)label(o.name,p[0]+6,p[1]-6,'rgba(200,215,255,.7)',11,'left');hits.push({x:p[0],y:p[1],r:18,pri:2,obj:o});continue}
     if(o.hidden){ctx.strokeStyle='rgba(255,207,107,.9)';ctx.lineWidth=1.5;ctx.beginPath();for(let k=0;k<8;k++){const t=k*Math.PI/4;ctx.moveTo(p[0]+Math.cos(t)*8,p[1]+Math.sin(t)*8);ctx.lineTo(p[0]+Math.cos(t)*20,p[1]+Math.sin(t)*20)}ctx.stroke();label(o.name+'の放射点',p[0],p[1]-26,'#ffcf6b',12,'center',true);continue}
     ctx.strokeStyle='rgba(200,215,255,.55)';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(p[0],p[1],5*z,3.5*z,0.5,0,7);ctx.stroke();
     if(S.show.names&&S.fov<120)label(o.name,p[0]+8*z,p[1]-4,'rgba(200,215,255,.7)',11,'left');
@@ -645,11 +660,11 @@ function showInfo(o){
 const hira=t=>t.replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[・\s　]/g,'').toLowerCase();
 const YOMI={'夏の大三角':'なつのだいさんかくけい','冬の大三角':'ふゆのだいさんかくけい','春の大三角':'はるのだいさんかくけい','秋の四辺形':'あきのしへんけい ぺがすすのだいしへんけい 大四辺形 秋の大四辺形','冬のダイヤモンド':'ふゆのだいやもんど 冬の大六角形 ふゆのだいろっかくけい','春のダイヤモンド':'はるのだいやもんど おとめ座の大ダイヤモンド',
  'オリオンの三つ星':'おりおんのみつぼし 三ツ星 みつぼし','北十字':'きたじゅうじ','南斗六星':'なんとろくせい','ししの大がま':'ししのおおがま','天の川の中心':'あまのがわ 天の川 ぎんがのちゅうしん 銀河',
- 'プレセペ星団':'ぷれせぺ','二重星団':'にじゅうせいだん','ヘルクレス座球状星団':'へるくれすざきゅうじょうせいだん m13','カシオペヤ座':'かしおぺあ だぶりゅー W','フォーマルハウト':'秋のひとつ星 あきのひとつぼし','スピカ':'真珠星 しんじゅぼし','アルクトゥルス':'麦星 むぎぼし','アンタレス':'さそりの心臓',
+ 'プレセペ星団':'m44 ぷれせぺ','二重星団':'にじゅうせいだん エイチカイ えいちかい h-χ hχ χ星 カイ星 かいせい ngc869 ngc884','ガーネットスター':'がーねっとすたー ガーネット μ星 みゅーせい ケフェウス座μ','アルコル':'あるこる','ミラ':'みら ο星 オミクロン','ダブルダブル':'だぶるだぶる こと座ε イプシロン','リング星雲':'りんぐせいうん m57','あれい状星雲':'あれいじょうせいうん 亜鈴状 m27','干潟星雲':'ひがたせいうん m8','ヘルクレス座球状星団':'m13 へるくれすざきゅうじょうせいだん m13','カシオペヤ座':'かしおぺあ だぶりゅー W','フォーマルハウト':'秋のひとつ星 あきのひとつぼし','スピカ':'真珠星 しんじゅぼし','アルクトゥルス':'麦星 むぎぼし','アンタレス':'さそりの心臓',
  'しぶんぎ座流星群':'しぶんぎざりゅうせいぐん 流れ星 ながれぼし','こと座流星群':'ことざりゅうせいぐん 流れ星 ながれぼし','ペルセウス座流星群':'ぺるせうすざりゅうせいぐん 流れ星 ながれぼし','オリオン座流星群':'おりおんざりゅうせいぐん 流れ星 ながれぼし','しし座流星群':'ししざりゅうせいぐん 流れ星 ながれぼし','ふたご座流星群':'ふたござりゅうせいぐん 流れ星 ながれぼし',
 '水星':'すいせい','金星':'きんせい よいのみょうじょう あけのみょうじょう','火星':'かせい','木星':'もくせい','土星':'どせい','天王星':'てんのうせい うらぬす','海王星':'かいおうせい ねぷちゅーん','月':'つき おつきさま',
- '北極星':'ほっきょくせい ぽらりす','すばる':'ぷれあです 昴 むつらぼし',
- '春の大曲線':'はるのだいきょくせん','北斗七星':'ほくとしちせい','ベガ':'おりひめ 織姫 たなばた 七夕','アルタイル':'ひこぼし 彦星 たなばた 七夕','オリオン大星雲':'おりおんだいせいうん','アンドロメダ銀河':'あんどろめだぎんが'};
+ '北極星':'ほっきょくせい ぽらりす','すばる':'m45 ぷれあです 昴 むつらぼし',
+ '春の大曲線':'はるのだいきょくせん','北斗七星':'ほくとしちせい','ベガ':'おりひめ 織姫 たなばた 七夕','アルタイル':'ひこぼし 彦星 たなばた 七夕','オリオン大星雲':'m42 おりおんだいせいうん','アンドロメダ銀河':'m31 あんどろめだぎんが'};
 let SEARCH=null;
 function searchIndex(){
   if(SEARCH)return SEARCH;const L=[];
@@ -682,9 +697,9 @@ function searchSheet(){
   renderResults('');
 }
 const SEASON_LIST={
- '春':['春の大三角','春の大曲線','春のダイヤモンド','北斗七星','ししの大がま','しし座','おとめ座','うしかい座','アルクトゥルス','スピカ','レグルス','プレセペ星団','こと座流星群'],
- '夏':['夏の大三角','北十字','南斗六星','天の川の中心','さそり座','いて座','はくちょう座','こと座','わし座','ベガ','アルタイル','デネブ','アンタレス','アルビレオ','ヘルクレス座球状星団','ペルセウス座流星群'],
- '秋':['秋の四辺形','カシオペヤ座','ペガスス座','アンドロメダ座','ペルセウス座','アンドロメダ銀河','二重星団','フォーマルハウト','みなみのうお座','オリオン座流星群','しし座流星群'],
+ '春':['春の大三角','春の大曲線','春のダイヤモンド','北斗七星','アルコル','ししの大がま','しし座','おとめ座','うしかい座','アルクトゥルス','スピカ','レグルス','プレセペ星団','こと座流星群'],
+ '夏':['夏の大三角','北十字','南斗六星','天の川の中心','さそり座','いて座','はくちょう座','こと座','わし座','ベガ','アルタイル','デネブ','アンタレス','アルビレオ','ダブルダブル','リング星雲','干潟星雲','ヘルクレス座球状星団','ペルセウス座流星群'],
+ '秋':['秋の四辺形','カシオペヤ座','ペガスス座','アンドロメダ座','ペルセウス座','アンドロメダ銀河','二重星団','ガーネットスター','ミラ','フォーマルハウト','みなみのうお座','オリオン座流星群','しし座流星群'],
  '冬':['冬の大三角','冬のダイヤモンド','オリオンの三つ星','オリオン座','おうし座','ふたご座','おおいぬ座','ぎょしゃ座','シリウス','ベテルギウス','リゲル','すばる','オリオン大星雲','ふたご座流星群','しぶんぎ座流星群'],
 };
 let curSeason=(m=>m>=3&&m<=5?'春':m>=6&&m<=8?'夏':m>=9&&m<=11?'秋':'冬')(new Date().getMonth()+1);
@@ -1015,12 +1030,15 @@ const up=e=>{const was=ptrs.has(e.pointerId);ptrs.delete(e.pointerId);if(!was)re
 cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',e=>{ptrs.delete(e.pointerId);drag=null;pinch=null});
 cv.addEventListener('wheel',e=>{e.preventDefault();S.fov=Math.max(15,Math.min(178,S.fov*Math.exp(e.deltaY*0.001)));dirty=true;saveView()},{passive:false});
 function tap(x,y){
+  if(calMode){let b=null;for(const h of hits){const o=h.obj;if(!['star','planet','moon','dso'].includes(o.type))continue;const d=Math.hypot(h.x-x,h.y-y);if(d>h.r+10)continue;if(!b||d<b.d)b={d,o}}
+    if(b)applyCal(b.o.type==='planet'||b.o.type==='moon'?{type:b.o.type,name:b.o.name}:b.o);else toast('星をタップしてね（名前が出ている星が使いやすいよ）');return}
   let best=null;for(const h of hits){const d=Math.hypot(h.x-x,h.y-y);if(d>h.r)continue;const sc=d-h.pri*6;if(!best||sc<best.sc)best={sc,h}}
   if(best){const o=best.h.obj;showInfo(o.type==='planet'||o.type==='moon'?{type:o.type,name:o.name}:o)}
   else if(sheetKind==='info')closeSheet();
 }
 
 /* ---------- スマホをかざすモード ---------- */
+let manualCal=false,bigErr=0,accWarned=false,calMode=false;
 let lastOri=0,compOff=null,compInit=[],rawPrev=null,speed=0;
 function declination(){return S.lon>122&&S.lon<150&&S.lat>20&&S.lat<47?-(4.5+(S.lat-26)*0.28):0}
 const angDeg=(p,q)=>Math.acos(Math.max(-1,Math.min(1,dot(p,q))))*R2D;
@@ -1043,8 +1061,11 @@ function onOri(e){
     const camAlt=altOf(raw.f);
     if(compOff==null){compInit.push(off);if(compInit.length>=8){
       const sx=compInit.reduce((t,o)=>t+Math.sin(o*D2R),0),cx=compInit.reduce((t,o)=>t+Math.cos(o*D2R),0);compOff=norm360(Math.atan2(sx,cx)*R2D)}}
-    else if(speed<0.3&&Math.abs(camAlt)<50&&(acc==null||(acc>=0&&acc<=25))){
-      const d=((off-compOff+540)%360)-180;if(Math.abs(d)<25)compOff=norm360(compOff+d*0.01)}
+    else if(!manualCal&&speed<0.3&&Math.abs(camAlt)<50&&(acc==null||(acc>=0&&acc<=25))){
+      const d=((off-compOff+540)%360)-180;
+      // 大きくずれた状態が続くとき（最初の方位がまちがっていた・8の字で直った）は、すばやく合わせ直す
+      if(Math.abs(d)>12){bigErr++;compOff=norm360(compOff+d*(bigErr>45?0.15:0.01))}else{bigErr=0;compOff=norm360(compOff+d*0.01)}}
+    if(acc!=null&&(acc<0||acc>25)&&!manualCal&&!accWarned){accWarned=true;toast('方位磁石の調子がよくないみたい。右上の「方位を合わせる」で直せるよ',4000)}
   }else if(e.absolute!==true&&compOff==null)compOff=0;
   if(compOff==null)return; // 方位が決まるまで待つ
   if(compOff)raw=basisFrom(e.alpha+compOff,e.beta,e.gamma);
@@ -1063,15 +1084,25 @@ async function startAR(){
     if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
       const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted'){toast('センサーの使用が許可されませんでした。指でドラッグして見てね',3500);return}}
   }catch(err){toast('この画面ではスマホの向きセンサーが使えません。指でドラッグして見てね',3500);return}
-  S.ar=true;S.basis=null;compOff=null;compInit=[];rawPrev=null;speed=0;lastOri=0;if(S.fov>110)S.fov=80;
+  S.ar=true;S.basis=null;compOff=null;compInit=[];rawPrev=null;speed=0;lastOri=0;manualCal=false;bigErr=0;accWarned=false;$('calBtn').hidden=false;document.documentElement.classList.add('ar');if(S.fov>110)S.fov=80;
   addEventListener('deviceorientation',onOri);$('arBtn').setAttribute('aria-pressed','true');
-  toast('スマホを見たい空に向けてね。方位が合わないときは、8の字にスマホを動かすと直ります',3500);
+  toast('スマホを見たい空に向けてね。方位がずれるときは、右上の「方位を合わせる」で直せるよ',3500);
   try{wake=await navigator.wakeLock?.request('screen')}catch(e){}
   setTimeout(()=>{if(S.ar&&!lastOri){stopAR();toast('スマホの向きセンサーが反応しません。指でドラッグして見てね',3500)}},2000);
 }
-function stopAR(){if(!S.ar)return;S.ar=false;removeEventListener('deviceorientation',onOri);$('arBtn').setAttribute('aria-pressed','false');
+function stopAR(){if(!S.ar)return;S.ar=false;$('calBtn').hidden=true;endCal();document.documentElement.classList.remove('ar');removeEventListener('deviceorientation',onOri);$('arBtn').setAttribute('aria-pressed','false');
   if(S.basis){S.az=azOf(S.basis.f);S.alt=Math.max(-20,Math.min(90,altOf(S.basis.f)))}S.basis=null;dirty=true;try{wake&&wake.release()}catch(e){}}
 $('arBtn').onclick=()=>S.ar?stopAR():startAR();
+// 方位を手で合わせる：本物の星にスマホのまん中を向け、画面の中のその星をタップ
+function beginCal(){calMode=true;$('calMsg').hidden=false;$('calBtn').textContent='やめる';dirty=true}
+function endCal(){calMode=false;$('calMsg').hidden=true;$('calBtn').textContent='方位を合わせる'}
+function applyCal(o){
+  const h=objH(o);if(!h||!S.basis||compOff==null)return false;
+  const da=((azOf(h)-azOf(S.basis.f)+540)%360)-180;
+  compOff=norm360(compOff-da);manualCal=true;S.basis=null;endCal();
+  toast(`方位を${Math.abs(Math.round(da))}°なおしました。${selName(o)}がまん中に来たかな？`,3000);return true;
+}
+$('calBtn').onclick=()=>calMode?endCal():beginCal();
 
 /* ---------- ループ ---------- */
 let lastMin=-1;
