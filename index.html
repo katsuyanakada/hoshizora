@@ -120,6 +120,28 @@ html.ar .banner{top:calc(env(safe-area-inset-top,0px) + 100px)}
 .calmsg b{display:block;color:var(--gold);font-size:15px}
 .toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--edge);
   padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.6;max-width:calc(100vw - 48px);text-align:center;pointer-events:none}
+.bar.no-ar{grid-template-columns:repeat(4,1fr)}
+/* iPad：文字とボタンを大きく */
+html.tablet .chip{font-size:15px;padding:9px 15px}
+html.tablet #redBtn{width:44px;height:44px}
+html.tablet .bar{padding-inline:max(10px,calc((100% - 680px)/2))}
+html.tablet .bar button{font-size:13px}
+html.tablet .bar button svg{width:30px;height:30px}
+html.tablet .sheet,html.tablet .tour,html.tablet .guide{max-width:620px}
+html.tablet .sheet h2{font-size:24px}
+html.tablet .sheet p,html.tablet .tour p{font-size:17px}
+html.tablet .tour h2{font-size:22px}
+html.tablet .list button{font-size:16px;padding:12px 6px}
+html.tablet .photo img{height:250px}
+html.tablet .banner{font-size:14px}
+/* 横長の大きい画面（iPadの横向きなど）：説明は右にならべ、空を広く見せる */
+@media (min-width:1000px) and (min-height:600px){
+  .sheet{left:auto;right:16px;top:calc(env(safe-area-inset-top,0px) + 64px);bottom:calc(env(safe-area-inset-bottom,0px) + 84px);
+    width:400px;max-height:none;margin:0}
+  .tour,.guide{left:auto;right:16px;width:400px;margin:0}
+  html.tablet .sheet,html.tablet .tour,html.tablet .guide{max-width:none;width:420px}
+  .calmsg{left:16px;right:auto;width:420px;margin:0}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head><body>
@@ -161,6 +183,12 @@ const CONS={"And":{"ja":"アンドロメダ座","ra":0.75,"dec":43,"rank":1,"lin
 </script>
 <script>
 "use strict";
+// 端末の判別：iPadのSafariは「Mac」と名乗るので、タッチ対応かどうかで見分ける
+const UA=navigator.userAgent;
+const IS_IPAD=/iPad/.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1);
+const IS_PHONE=/iPhone|iPod|Android.+Mobile/.test(UA);
+const TABLET=IS_IPAD||(!IS_PHONE&&navigator.maxTouchPoints>1&&Math.min(screen.width,screen.height)>=700);
+if(TABLET)document.documentElement.classList.add('tablet');
 const D2R=Math.PI/180, R2D=180/Math.PI;
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem('hoshi.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
@@ -542,6 +570,7 @@ function render(){
 function mix(a,b,t){return a.map((x,i)=>x+(b[i]-x)*t)}
 function rgb(c){return `rgb(${c.map(Math.round).join(',')})`}
 function label(txt,x,y,col,size,align,shadow){
+  if(TABLET)size*=1.15;
   ctx.font=`${size}px ${FONT_FAMILY}`;
   ctx.textAlign=align;ctx.fillStyle=col;
   if(shadow){ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=4}
@@ -663,10 +692,10 @@ function showInfo(o){
   openSheet('info',`<div class="sub">${kind}</div><h2>${title}</h2>${fig}
     ${tags.length?`<div class="facts">${tags.map((t,i)=>`<span class="tag ${i===0?'gold':''}">${t}</span>`).join('')}</div>`:''}
     <p>${text}</p>${north}${where}
-    <div class="row">${S.ar?'':'<button class="btn" id="goBtn">この方向を見る</button>'}<button class="btn primary" id="guideBtn">${S.ar?'矢印でさがす':'スマホをかざしてさがす'}</button></div>`);
+    <div class="row">${S.ar?'':'<button class="btn" id="goBtn">この方向を見る</button>'}${TABLET?'':`<button class="btn primary" id="guideBtn">${S.ar?'矢印でさがす':'スマホをかざしてさがす'}</button>`}</div>`);
   if(!S.ar)$('goBtn').onclick=()=>flyTo(h);
   const ph=$('photo');if(ph){const img=ph.querySelector('img');img.onerror=()=>ph.remove();img.onclick=()=>ph.classList.toggle('big')}
-  $('guideBtn').onclick=()=>{startGuide(o,true)};
+  if($('guideBtn'))$('guideBtn').onclick=()=>{startGuide(o,true)};
 }
 /* ---------- さがす ---------- */
 const hira=t=>t.replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[・\s　]/g,'').toLowerCase();
@@ -769,7 +798,7 @@ function updateGuide(){
   else if(found)msg='見つけた！まんなかの丸のあたりにあるよ';
   else msg=`黄色い矢印の方へスマホを向けてね（あと${Math.round(off)}°）<br>${d.dir}の空・高さ${Math.round(d.alt)}°`;
   $('guideText').innerHTML=`<b>${selName(S.sel)}</b>${msg}`;
-  $('guideAr').hidden=S.ar||d.alt<0;
+  $('guideAr').hidden=TABLET||S.ar||d.alt<0;
 }
 $('guideClose').onclick=()=>{guideOn=false;S.sel=null;dirty=true};
 $('guideAr').onclick=()=>startGuide(S.sel,true);
@@ -868,8 +897,8 @@ function tourGo(i){
   $('tourHead').textContent=`${TOUR.season}の星空ツアー　${i+1} / ${TOUR.steps.length}`;
   $('tourBody').innerHTML=`<h2>${st.name}</h2><p>${st.text}</p><div class="where2">${d.dir}の空・高さ${Math.round(d.alt)}°（にぎりこぶし約${Math.max(1,Math.round(d.alt/10*2)/2)}こ分）</div>`;
   tourButtons();dirty=true;
-  $('tour').hidden=false;const cardTop=$('tour').getBoundingClientRect().top;
-  flyTo(h,tourFov(st.o),(60+cardTop)/2);
+  $('tour').hidden=false;
+  flyTo(h,tourFov(st.o));
   tourSay(st.text,()=>tourGo(i+1));
 }
 function tourEnd(){
@@ -926,11 +955,18 @@ $('tourPlay').onclick=()=>{if(!TOUR)return;
 $('tourSnd').onclick=()=>{if(!TOUR)return;TOUR.snd=!TOUR.snd;store.set('tourSnd',TOUR.snd);if(!TOUR.snd)try{speechSynthesis.cancel()}catch(e){}
   tourButtons();if(TOUR.playing)tourGo(TOUR.i)};
 
-function flyTo(h,fov,yT){
+// 説明カードなどに隠れない「空いている場所」のまん中（右に置いたパネル／下のカードの両方に対応）
+function freeSpot(){
+  for(const id of ['sheet','tour','guide']){const el=$(id);if(el.hidden)continue;const r=el.getBoundingClientRect();
+    if(r.left>W*0.45)return {x:r.left/2,y:H/2};      // 右にならぶパネル（iPadの横向き・大きい画面）
+    return {x:W/2,y:(60+r.top)/2}}                    // 下のカード（iPhone・iPadの縦向き）
+  return {x:W/2,y:H/2};
+}
+function flyTo(h,fov){
   if(S.ar)return;const f1=fov||(S.fov>140?100:S.fov);
-  // yT: 画面のこの高さに目標が来るように、見る中心を少し下げる（下に案内カードがあるとき）
-  const shift=yT!=null?Math.max(0,(H/2-yT))*f1/Math.min(W,H):0;
-  const taz=azOf(h),talt=Math.max(-20,Math.min(85,altOf(h)-shift));
+  const sp=freeSpot(),k=f1/Math.min(W,H),alt=altOf(h);
+  const talt=Math.max(-20,Math.min(85,alt-Math.max(0,H/2-sp.y)*k));
+  const taz=azOf(h)+(W/2-sp.x)*k/Math.max(0.35,Math.cos(alt*D2R));
   const a0=S.az,h0=S.alt,f0=S.fov;let da=((taz-a0+540)%360)-180;const t0=performance.now();
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const dur=fov?1400:700;const step=now=>{const k=reduce?1:Math.min(1,(now-t0)/dur),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
@@ -1130,6 +1166,7 @@ function loop(){
   if(dirty)render();requestAnimationFrame(loop);
 }
 updateTop();
+if(TABLET){$('arBtn').hidden=true;document.querySelector('.bar').classList.add('no-ar')}
 if(S.placeSrc==='gps')locate(false);
 requestAnimationFrame(loop);
 </script>
